@@ -207,97 +207,122 @@ function Hero() {
   );
 }
 
-/* ---------- Animated trust visual (replaces previous "Disponible" card) ---------- */
+/* ---------- Hero visual: refined, calm, premium ---------- */
 function TrustOrb() {
   return (
-    <div className="relative mx-auto flex aspect-square w-full max-w-[520px] items-center justify-center">
-      {/* Glow */}
+    <div className="relative mx-auto aspect-[5/6] w-full max-w-[480px]">
+      {/* Soft ambient glow */}
       <div
-        className="absolute inset-8 rounded-full opacity-40 blur-3xl"
+        className="absolute -inset-10 -z-10 rounded-[3rem] opacity-40 blur-3xl"
         style={{ background: "var(--gradient-brand)" }}
       />
-
-      {/* Slowly rotating decorative ring */}
-      <div className="absolute inset-0 animate-spin-slow">
-        <svg viewBox="0 0 400 400" className="h-full w-full">
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.55 0.23 265)" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="oklch(0.62 0.22 295)" stopOpacity="0.1" />
-            </linearGradient>
-          </defs>
-          <circle
-            cx="200" cy="200" r="180"
-            fill="none"
-            stroke="url(#ringGrad)"
-            strokeWidth="1.2"
-            strokeDasharray="6 10"
-          />
-        </svg>
-      </div>
-
-      {/* Pulse rings */}
-      <span
-        className="absolute h-56 w-56 rounded-full border animate-pulse-ring"
-        style={{ borderColor: "oklch(0.52 0.24 268 / 0.45)" }}
-      />
-      <span
-        className="absolute h-56 w-56 rounded-full border animate-pulse-ring"
-        style={{ borderColor: "oklch(0.62 0.22 295 / 0.4)", animationDelay: "1.1s" }}
-      />
-
-      {/* Static outer ring */}
+      {/* Subtle dotted grid */}
       <div
-        className="absolute h-72 w-72 rounded-full border"
-        style={{ borderColor: "oklch(0.52 0.24 268 / 0.15)" }}
-      />
-      <div
-        className="absolute h-96 w-96 rounded-full border"
-        style={{ borderColor: "oklch(0.52 0.24 268 / 0.08)" }}
+        className="absolute inset-0 -z-10 opacity-[0.18]"
+        style={{
+          backgroundImage:
+            "radial-gradient(oklch(0.52 0.24 268 / 0.5) 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
       />
 
-      {/* Center orb */}
+      {/* Back card — depth */}
       <div
-        className="relative flex h-44 w-44 items-center justify-center rounded-full text-primary-foreground shadow-[var(--shadow-brand)] animate-float"
-        style={{ background: "var(--gradient-brand)" }}
+        className="absolute left-1/2 top-6 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-border/70 bg-card/60 backdrop-blur-sm"
+        style={{ transform: "translate(-46%, 0) rotate(-5deg)" }}
+      />
+
+      {/* Main brand card */}
+      <div
+        className="relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-3xl p-8 text-primary-foreground shadow-[var(--shadow-brand)] animate-float-slow"
+        style={{ background: "var(--gradient-hero)" }}
       >
-        <Shield className="h-16 w-16" strokeWidth={1.6} />
-        <span
-          className="absolute -bottom-2 -right-2 flex h-12 w-12 items-center justify-center rounded-full bg-card text-primary shadow-lg"
-          style={{ boxShadow: "var(--shadow-card)" }}
-        >
-          <CheckCircle2 className="h-6 w-6" />
-        </span>
+        {/* Decorative rings */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/15" />
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-white/10" />
+        <div className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full border border-white/10" />
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md">
+              <span className="text-sm font-bold">A</span>
+            </div>
+            <span className="text-sm font-semibold tracking-tight opacity-95">AdeCerebiia</span>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-medium backdrop-blur-md">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+            </span>
+            En línea
+          </div>
+        </div>
+
+        {/* Brand emblem with pulse */}
+        <div className="relative mx-auto mt-10 flex h-40 w-40 items-center justify-center">
+          <span className="absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring" />
+          <span
+            className="absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring"
+            style={{ animationDelay: "1.2s" }}
+          />
+          <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-white/15 backdrop-blur-md ring-1 ring-white/25">
+            <Shield className="h-12 w-12" strokeWidth={1.6} />
+            <span className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-primary shadow-lg">
+              <CheckCircle2 className="h-5 w-5" strokeWidth={2.2} />
+            </span>
+          </div>
+        </div>
+
+        {/* Tagline */}
+        <div className="mt-10 text-center">
+          <div className="text-[11px] font-medium uppercase tracking-[0.2em] opacity-70">
+            Confianza · Bienestar
+          </div>
+          <div className="mt-2 text-2xl font-bold leading-tight">
+            Adelantos seguros<br />para tu equipo
+          </div>
+        </div>
+
+        {/* Mini trust rail */}
+        <div className="mt-8 grid grid-cols-3 gap-2 border-t border-white/20 pt-5 text-center">
+          <TrustStat label="Cuotas" value="Hasta 3" />
+          <TrustStat label="Costo empresa" value="$0" />
+          <TrustStat label="Empresas" value="200+" />
+        </div>
       </div>
 
-      {/* Floating chips */}
-      <FloatingChip
-        className="left-0 top-10 animate-float"
-        icon={<Zap className="h-4 w-4" />}
-        title="Al instante"
-        sub="< 30 segundos"
-      />
-      <FloatingChip
-        className="right-0 top-24 animate-float-slow"
-        icon={<CalendarClock className="h-4 w-4" />}
-        title="A cuotas"
-        sub="Hasta 6 meses"
-        style={{ animationDelay: "0.6s" }}
-      />
-      <FloatingChip
-        className="left-4 bottom-10 animate-float-slow"
-        icon={<Lock className="h-4 w-4" />}
-        title="Seguro"
-        sub="Cifrado bancario"
-        style={{ animationDelay: "1.2s" }}
-      />
-      <FloatingChip
-        className="right-2 bottom-20 animate-float"
-        icon={<HeartHandshake className="h-4 w-4" />}
-        title="Sin riesgo"
-        sub="Para tu empresa"
-        style={{ animationDelay: "0.3s" }}
-      />
+      {/* Floating accent chips */}
+      <div className="absolute -left-4 top-24 animate-float">
+        <FloatingChip
+          icon={<HeartHandshake className="h-4 w-4" />}
+          title="Sin riesgo"
+          sub="Para tu empresa"
+        />
+      </div>
+      <div className="absolute -right-4 bottom-28 animate-float-slow" style={{ animationDelay: "0.6s" }}>
+        <FloatingChip
+          icon={<CalendarClock className="h-4 w-4" />}
+          title="Hasta 3 cuotas"
+          sub="Flexibilidad de pago"
+        />
+      </div>
+      <div className="absolute -left-2 bottom-10 animate-float-slow" style={{ animationDelay: "1.1s" }}>
+        <FloatingChip
+          icon={<Lock className="h-4 w-4" />}
+          title="100% seguro"
+          sub="Cifrado bancario"
+        />
+      </div>
+    </div>
+  );
+}
+
+function TrustStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-wider opacity-70">{label}</div>
+      <div className="mt-1 text-sm font-bold">{value}</div>
     </div>
   );
 }
@@ -317,7 +342,7 @@ function FloatingChip({
 }) {
   return (
     <div
-      className={`absolute flex items-center gap-3 rounded-2xl border border-border bg-card/95 px-3.5 py-2.5 backdrop-blur-sm shadow-[var(--shadow-card)] ${className}`}
+      className={`flex items-center gap-3 rounded-2xl border border-border bg-card/95 px-3.5 py-2.5 backdrop-blur-sm shadow-[var(--shadow-card)] ${className}`}
       style={style}
     >
       <div
