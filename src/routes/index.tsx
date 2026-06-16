@@ -170,8 +170,8 @@ function Hero() {
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Ofrece a tus empleados acceso instantáneo al salario que ya ganaron,
-              con la flexibilidad de pagar a una o varias cuotas. Simple, seguro y sin riesgo para la empresa.
+              Ofrece a tus empleados acceso al salario que ya ganaron,
+              con la flexibilidad de pagarlo hasta en 3 cuotas. Simple, seguro y sin riesgo para la empresa.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <a
@@ -193,7 +193,7 @@ function Hero() {
             </div>
             <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Sin costo para la empresa</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Pagos a cuotas</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Hasta 3 cuotas</div>
               <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 100% digital</div>
             </div>
           </Reveal>
