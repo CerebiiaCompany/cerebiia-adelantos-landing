@@ -3,12 +3,9 @@ import { useEffect, useRef, type ReactNode } from "react";
 import {
   Zap,
   Shield,
-  Wallet,
   ArrowRight,
   Sparkles,
-  Clock,
   Users,
-  BarChart3,
   CheckCircle2,
   Building2,
   Smartphone,
