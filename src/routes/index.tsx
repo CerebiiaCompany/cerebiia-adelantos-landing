@@ -384,8 +384,8 @@ function Logos() {
 /* ---------- Features (beneficios) ---------- */
 function Features() {
   const items = [
-    { icon: Zap, title: "Adelantos al instante", desc: "Tus empleados acceden a su salario ganado en segundos, cuando más lo necesitan." },
-    { icon: CalendarClock, title: "Pagos a cuotas", desc: "Cada adelanto se puede pagar en una o varias cuotas, sin afectar el bolsillo del empleado." },
+    { icon: Zap, title: "Solicitud en segundos", desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten." },
+    { icon: CalendarClock, title: "Pagos hasta en 3 cuotas", desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado." },
     { icon: Shield, title: "Cero riesgo para la empresa", desc: "Sin impacto en flujo de caja. Nosotros financiamos los adelantos y asumimos el riesgo." },
     { icon: HeartHandshake, title: "Retención de talento", desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo." },
     { icon: PiggyBank, title: "Bienestar financiero", desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses." },
@@ -433,9 +433,8 @@ function Features() {
 function Installments() {
   const cuotas = [
     { n: "1", label: "Cuota única", desc: "Se descuenta en la siguiente nómina." },
-    { n: "2", label: "2 cuotas", desc: "Distribuido en los próximos pagos." },
-    { n: "3", label: "3 cuotas", desc: "Más flexibilidad para el empleado." },
-    { n: "6", label: "Hasta 6 cuotas", desc: "Para adelantos de mayor monto." },
+    { n: "2", label: "2 cuotas", desc: "Distribuido en las próximas dos nóminas." },
+    { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el empleado." },
   ];
   return (
     <section id="cuotas" className="relative overflow-hidden py-24 sm:py-32">
@@ -451,13 +450,13 @@ function Installments() {
               Flexibilidad real para tus empleados
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Cada adelanto puede pagarse en una o varias cuotas, ajustándose al momento financiero del empleado.
+              Cada adelanto puede pagarse hasta en 3 cuotas, ajustándose al momento financiero del empleado.
               Menos presión, mayor adopción y un beneficio que realmente se siente.
             </p>
             <ul className="mt-8 space-y-3">
               {[
-                "Descuento automático por nómina, sin gestión manual",
-                "El empleado elige el plazo que mejor se ajusta a su flujo",
+                "Descuento por nómina, sin gestión manual para tu empresa",
+                "El empleado elige entre 1, 2 o 3 cuotas según su flujo",
                 "Total transparencia: ve sus cuotas y saldos en tiempo real",
                 "Sin intereses ocultos ni letra pequeña",
               ].map((b) => (
@@ -470,7 +469,7 @@ function Installments() {
           </Reveal>
 
           <Reveal delay={150}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {cuotas.map((c, i) => (
                 <div
                   key={c.label}
@@ -500,8 +499,8 @@ function HowItWorks() {
   const steps = [
     { n: "01", title: "Conecta tu nómina", desc: "Integramos AdeCerebiia con tu sistema de nómina en días." },
     { n: "02", title: "Activa a tus empleados", desc: "Cada empleado recibe acceso a su panel personal." },
-    { n: "03", title: "Solicitan y eligen cuotas", desc: "Piden el adelanto desde la app y eligen el plazo de pago." },
-    { n: "04", title: "Descuento automático", desc: "Las cuotas se descuentan de la nómina sin trabajo extra para ti." },
+    { n: "03", title: "Solicitan desde la app", desc: "Piden el adelanto y eligen entre 1, 2 o 3 cuotas. La solicitud llega al panel de Cerebiia." },
+    { n: "04", title: "Pagamos y descontamos", desc: "Nuestro equipo procesa y desembolsa el adelanto. Las cuotas se descuentan de la nómina sin trabajo extra para ti." },
   ];
   return (
     <section id="como-funciona" className="py-24 sm:py-32">
@@ -612,7 +611,7 @@ function Stats() {
   const stats = [
     { icon: Users, value: "50K+", label: "Empleados activos" },
     { icon: Building2, value: "200+", label: "Empresas conectadas" },
-    { icon: Clock, value: "< 30s", label: "Tiempo promedio" },
+    { icon: CalendarClock, value: "Hasta 3", label: "Cuotas por adelanto" },
     { icon: TrendingUp, value: "99.9%", label: "Disponibilidad" },
   ];
   return (
