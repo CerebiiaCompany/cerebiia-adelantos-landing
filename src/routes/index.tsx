@@ -5,7 +5,6 @@ import {
   Shield,
   ArrowRight,
   Sparkles,
-  Users,
   CheckCircle2,
   Building2,
   Smartphone,
@@ -13,7 +12,6 @@ import {
   CalendarClock,
   PiggyBank,
   HeartHandshake,
-  TrendingUp,
 } from "lucide-react";
 
 const WHATSAPP_NUMBER = "573169393922";
@@ -29,13 +27,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Plataforma de adelantos de nómina con pagos a cuotas. Da a tus empleados acceso instantáneo a su salario ganado, de forma segura y flexible.",
+          "Plataforma de adelantos de nómina con pagos hasta en 3 cuotas. La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.",
       },
       { property: "og:title", content: "AdeCerebiia — Adelantos de nómina" },
       {
         property: "og:description",
         content:
-          "Bienestar financiero para tus empleados. Adelantos al instante, pagos a cuotas y cero riesgo para la empresa.",
+          "Bienestar financiero para tus empleados. Adelantos hasta en 3 cuotas y cero riesgo para la empresa.",
       },
     ],
   }),
@@ -47,12 +45,10 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground antialiased">
       <Nav />
       <Hero />
-      <Logos />
       <Features />
       <Installments />
       <HowItWorks />
       <ForCompanies />
-      <Stats />
       <CTA />
       <Footer />
     </div>
@@ -168,7 +164,7 @@ function Hero() {
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
               Ofrece a tus empleados acceso al salario que ya ganaron,
-              con la flexibilidad de pagarlo hasta en 3 cuotas. Simple, seguro y sin riesgo para la empresa.
+              con la flexibilidad de pagarlo hasta en 3 cuotas. La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <a
@@ -190,8 +186,8 @@ function Hero() {
             </div>
             <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Sin costo para la empresa</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Tarifa fija: $8.000 por adelanto</div>
               <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Hasta 3 cuotas</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> 100% digital</div>
             </div>
           </Reveal>
 
@@ -285,7 +281,7 @@ function TrustOrb() {
         <div className="mt-8 grid grid-cols-3 gap-2 border-t border-white/20 pt-5 text-center">
           <TrustStat label="Cuotas" value="Hasta 3" />
           <TrustStat label="Costo empresa" value="$0" />
-          <TrustStat label="Empresas" value="200+" />
+          <TrustStat label="Tarifa" value="$8.000" />
         </div>
       </div>
 
@@ -306,9 +302,9 @@ function TrustOrb() {
       </div>
       <div className="absolute -left-2 bottom-10 animate-float-slow" style={{ animationDelay: "1.1s" }}>
         <FloatingChip
-          icon={<Lock className="h-4 w-4" />}
-          title="100% seguro"
-          sub="Cifrado bancario"
+          icon={<PiggyBank className="h-4 w-4" />}
+          title="Tarifa fija"
+          sub="$8.000 por adelanto"
         />
       </div>
     </div>
@@ -356,34 +352,12 @@ function FloatingChip({
   );
 }
 
-/* ---------- Logos ---------- */
-function Logos() {
-  return (
-    <section className="border-y border-border/60 bg-muted/30 py-10">
-      <div className="mx-auto max-w-7xl px-6">
-        <Reveal>
-          <p className="text-center text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Empresas que confían en AdeCerebiia
-          </p>
-          <div className="mt-6 grid grid-cols-2 items-center gap-8 opacity-60 sm:grid-cols-3 md:grid-cols-6">
-            {["NORDIK", "VERTEX", "LUMEN", "OASIS", "AXIOM", "PRISMA"].map((n) => (
-              <div key={n} className="text-center text-base font-semibold tracking-widest text-muted-foreground">
-                {n}
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
 /* ---------- Features (beneficios) ---------- */
 function Features() {
   const items = [
     { icon: Zap, title: "Solicitud en segundos", desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten." },
     { icon: CalendarClock, title: "Pagos hasta en 3 cuotas", desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado." },
-    { icon: Shield, title: "Cero riesgo para la empresa", desc: "Sin impacto en flujo de caja. Nosotros financiamos los adelantos y asumimos el riesgo." },
+    { icon: Shield, title: "Cero riesgo para la empresa", desc: "La empresa no paga nada. El empleado asume una tarifa fija de $8.000 por adelanto." },
     { icon: HeartHandshake, title: "Retención de talento", desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo." },
     { icon: PiggyBank, title: "Bienestar financiero", desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses." },
     { icon: Smartphone, title: "100% digital", desc: "Sin papeleos ni trámites. Tus empleados solicitan desde su móvil en cualquier momento." },
@@ -400,7 +374,7 @@ function Features() {
               Bienestar para tu equipo, tranquilidad para tu empresa
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Una solución integral que transforma la relación de tus empleados con su salario.
+              Una solución integral donde la empresa no asume costos y el empleado accede a su salario ganado de forma flexible.
             </p>
           </div>
         </Reveal>
@@ -448,12 +422,13 @@ function Installments() {
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
               Cada adelanto puede pagarse hasta en 3 cuotas, ajustándose al momento financiero del empleado.
-              Menos presión, mayor adopción y un beneficio que realmente se siente.
+              La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.
             </p>
             <ul className="mt-8 space-y-3">
               {[
                 "Descuento por nómina, sin gestión manual para tu empresa",
                 "El empleado elige entre 1, 2 o 3 cuotas según su flujo",
+                "Tarifa fija de $8.000 por adelanto: si solicita $500.000, recibe $492.000",
                 "Total transparencia: ve sus cuotas y saldos en tiempo real",
                 "Sin intereses ocultos ni letra pequeña",
               ].map((b) => (
@@ -541,6 +516,7 @@ function ForCompanies() {
     "Reduce el ausentismo causado por estrés financiero",
     "Aumenta la productividad y satisfacción del equipo",
     "Sin costo de implementación ni mantenimiento",
+    "La empresa no paga nada: el empleado asume el costo de $8.000 por adelanto",
     "Integración con tu sistema de nómina actual",
     "Soporte dedicado para tu empresa y empleados",
   ];
@@ -586,7 +562,7 @@ function ForCompanies() {
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
               AdeCerebiia se integra con tu sistema de nómina y entrega a tu equipo acceso a su salario ganado.
-              Sin costo, sin riesgo, sin complicaciones.
+              Sin costo para la empresa, sin riesgo, sin complicaciones.
             </p>
             <ul className="mt-8 space-y-3">
               {benefits.map((b) => (
@@ -598,36 +574,6 @@ function ForCompanies() {
             </ul>
           </Reveal>
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Stats ---------- */
-function Stats() {
-  const stats = [
-    { icon: Users, value: "50K+", label: "Empleados activos" },
-    { icon: Building2, value: "200+", label: "Empresas conectadas" },
-    { icon: CalendarClock, value: "Hasta 3", label: "Cuotas por adelanto" },
-    { icon: TrendingUp, value: "99.9%", label: "Disponibilidad" },
-  ];
-  return (
-    <section className="border-y border-border/60 bg-muted/30 py-16">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-6 md:grid-cols-4">
-        {stats.map(({ icon: Icon, value, label }, i) => (
-          <Reveal key={label} delay={i * 80}>
-            <div className="text-center">
-              <Icon className="mx-auto h-6 w-6 text-primary" />
-              <div
-                className="mt-3 text-4xl font-bold bg-clip-text text-transparent"
-                style={{ backgroundImage: "var(--gradient-brand)" }}
-              >
-                {value}
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">{label}</div>
-            </div>
-          </Reveal>
-        ))}
       </div>
     </section>
   );
