@@ -1,11 +1,13 @@
 import { r as __toESM } from "../_runtime.mjs";
-import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider } from "../_libs/react+tanstack__react-query.mjs";
+import { r as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { a as createRouter, c as createFileRoute, d as useRouter, l as createRootRouteWithContext, n as Scripts, o as Outlet, r as HeadContent, s as lazyRouteComponent, u as Link } from "../_libs/@tanstack/react-router+[...].mjs";
+import { r as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CqYehRpB.js
+import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DnSTpFHR.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-CD2F-Ick.css";
+var styles_default = "/assets/styles-D7sD_oAI.css";
 function reportLovableError(error, context = {}) {
 	if (typeof window === "undefined") return;
 	window.__lovableEvents?.captureException?.(error, {
@@ -92,24 +94,24 @@ var Route$1 = createRootRouteWithContext()({
 			{ charSet: "utf-8" },
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1"
+				content: "width=device-width, initial-scale=1, viewport-fit=cover"
 			},
-			{ title: "Lovable App" },
+			{ title: "AdeCerebiia — Adelantos de nómina" },
 			{
 				name: "description",
-				content: "Lovable Generated Project"
+				content: "Adelantos con Cerebiia"
 			},
 			{
 				name: "author",
-				content: "Lovable"
+				content: "Cerebiia"
 			},
 			{
 				property: "og:title",
-				content: "Lovable App"
+				content: "AdeCerebiia"
 			},
 			{
 				property: "og:description",
-				content: "Lovable Generated Project"
+				content: "Adelantos con Cerebiia"
 			},
 			{
 				property: "og:type",
@@ -124,10 +126,25 @@ var Route$1 = createRootRouteWithContext()({
 				content: "@Lovable"
 			}
 		],
-		links: [{
-			rel: "stylesheet",
-			href: styles_default
-		}]
+		links: [
+			{
+				rel: "stylesheet",
+				href: styles_default
+			},
+			{
+				rel: "preconnect",
+				href: "https://fonts.googleapis.com"
+			},
+			{
+				rel: "preconnect",
+				href: "https://fonts.gstatic.com",
+				crossOrigin: "anonymous"
+			},
+			{
+				rel: "stylesheet",
+				href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+			}
+		]
 	}),
 	shellComponent: RootShell,
 	component: RootComponent,
@@ -136,7 +153,7 @@ var Route$1 = createRootRouteWithContext()({
 });
 function RootShell({ children }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("html", {
-		lang: "en",
+		lang: "es",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("head", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HeadContent, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("body", { children: [children, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scripts, {})] })]
 	});
 }
@@ -147,7 +164,7 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter = () => import("./routes-CPSVQwKu.mjs");
+var $$splitComponentImporter = () => import("./routes-DlRVhejc.mjs");
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "AdeCerebiia — Adelantos de nómina para tu empresa" },

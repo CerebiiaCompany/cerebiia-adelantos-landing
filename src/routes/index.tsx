@@ -1,23 +1,234 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import {
-  Zap,
-  Shield,
+  Bolt,
+  ShieldCheck,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
   Building2,
   Smartphone,
-  CalendarClock,
-  PiggyBank,
+  CalendarDays,
+  TrendingUp,
+  Users,
   HeartHandshake,
+  Menu,
+  X,
+  ChevronDown,
+  House,
+  Medal,
+  Banknote,
+  Workflow,
+  Wallet,
+  type LucideIcon,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const WHATSAPP_NUMBER = "573169393922";
 const WHATSAPP_MESSAGE = encodeURIComponent(
   "Hola, me interesa una demo de AdeCerebiia para mi empresa."
 );
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
+const LOGIN_URL = "https://adelantos.cerebiia.com.co/login";
+const REGISTER_URL = "https://adelantos.cerebiia.com.co/registro";
+
+const NAV_LINKS = [
+  { href: "#inicio", label: "Inicio", icon: House },
+  { href: "#producto", label: "Beneficios", icon: Medal },
+  { href: "#cuotas", label: "Pagos a cuotas", icon: Banknote },
+  { href: "#como-funciona", label: "Cómo funciona", icon: Workflow },
+  { href: "#empresas", label: "Para empresas", icon: Building2 },
+] as const;
+
+const NAV_HEADER_OFFSET = 72;
+
+function navigateToHash(href: string) {
+  if (!href.startsWith("#")) return;
+  const id = href.slice(1);
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  const top =
+    target.getBoundingClientRect().top + window.scrollY - NAV_HEADER_OFFSET;
+
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  window.history.pushState(null, "", href);
+}
+
+function handleMobileNavClick(
+  href: string,
+  closeMenu: () => void,
+  event?: MouseEvent<HTMLAnchorElement>,
+) {
+  if (href.startsWith("#")) {
+    event?.preventDefault();
+    closeMenu();
+    window.setTimeout(() => navigateToHash(href), 300);
+    return;
+  }
+  closeMenu();
+}
+
+const NAV_ICON_HOVER_ANIM: Record<(typeof NAV_LINKS)[number]["href"], string> = {
+  "#inicio": "nav-icon-anim-home",
+  "#producto": "nav-icon-anim-medal",
+  "#cuotas": "nav-icon-anim-banknote",
+  "#como-funciona": "nav-icon-anim-workflow",
+  "#empresas": "nav-icon-anim-building",
+};
+
+const ICON_SIZES = {
+  nav: { wrap: "h-6 w-6 rounded-md", icon: "h-3 w-3" },
+  xs: { wrap: "h-7 w-7 rounded-lg", icon: "h-3.5 w-3.5" },
+  sm: { wrap: "h-9 w-9 rounded-xl", icon: "h-4 w-4" },
+  md: { wrap: "h-12 w-12 rounded-xl", icon: "h-5 w-5" },
+  lg: { wrap: "h-14 w-14 rounded-2xl", icon: "h-7 w-7" },
+} as const;
+
+function BrandIcon({
+  icon: Icon,
+  size = "md",
+  variant = "gradient",
+  className = "",
+}: {
+  icon: LucideIcon;
+  size?: keyof typeof ICON_SIZES;
+  variant?: "gradient" | "glass" | "soft" | "orb";
+  className?: string;
+}) {
+  const s = ICON_SIZES[size];
+  const variantClass =
+    variant === "glass"
+      ? "bg-white text-primary shadow-[0_8px_24px_rgba(15,23,42,0.12)] ring-1 ring-white"
+      : variant === "soft"
+        ? "bg-primary/12 text-primary ring-1 ring-primary/25 shadow-[var(--shadow-brand)]"
+        : variant === "orb"
+          ? "text-primary-foreground shadow-[var(--shadow-orb)]"
+          : "text-primary-foreground shadow-[var(--shadow-brand)]";
+
+  const gradientStyle =
+    variant === "gradient"
+      ? { background: "var(--gradient-brand)" }
+      : variant === "orb"
+        ? { background: "var(--gradient-orb)" }
+        : undefined;
+
+  return (
+    <div
+      className={`flex shrink-0 items-center justify-center transition-transform duration-300 ${s.wrap} ${variantClass} ${className}`}
+      style={gradientStyle}
+    >
+      <Icon className={s.icon} strokeWidth={2.25} aria-hidden />
+    </div>
+  );
+}
+
+/* ---------- Design system (glass) ---------- */
+function GlassCard({
+  children,
+  className = "",
+  hover = true,
+  as: Tag = "div",
+}: {
+  children: ReactNode;
+  className?: string;
+  hover?: boolean;
+  as?: "div" | "article";
+}) {
+  return (
+    <Tag
+      className={`glass-card ${hover ? "glass-card-hover" : ""} ${className}`}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+function SectionBadge({ children }: { children: ReactNode }) {
+  return <div className="section-badge">{children}</div>;
+}
+
+function SectionHeader({
+  badge,
+  title,
+  subtitle,
+  centered = true,
+  className = "",
+}: {
+  badge?: string;
+  title: string;
+  subtitle?: string;
+  centered?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`${centered ? "mx-auto max-w-2xl text-center" : ""} ${className}`}>
+      {badge && <SectionBadge>{badge}</SectionBadge>}
+      <h2 className="section-title">{title}</h2>
+      {subtitle && <p className="section-subtitle">{subtitle}</p>}
+    </div>
+  );
+}
+
+function GlassButtonPrimary({
+  href,
+  children,
+  className = "",
+  external = false,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+  external?: boolean;
+}) {
+  return (
+    <a
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className={`btn-glass-primary nav-btn-lift ${className}`}
+    >
+      {children}
+    </a>
+  );
+}
+
+function GlassButtonSecondary({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <a href={href} className={`btn-glass-secondary nav-btn-lift ${className}`}>
+      {children}
+    </a>
+  );
+}
+
+function CheckIcon({ light = false }: { light?: boolean }) {
+  return (
+    <div
+      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+        light
+          ? "bg-white/10 ring-1 ring-white/25 backdrop-blur-sm"
+          : "bg-white/10 ring-1 ring-white/20 backdrop-blur-sm"
+      }`}
+    >
+      <CheckCircle2
+        className={`h-4 w-4 ${light ? "text-cyan-200" : "text-cyan-200"}`}
+        strokeWidth={2.25}
+      />
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,17 +250,110 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+const LANDING_OUTLINE_STYLES = {
+  sm: "landing-deco-outline-sm",
+  md: "landing-deco-outline",
+  lg: "landing-deco-outline-lg",
+} as const;
+
+const LANDING_SHAPES = [
+  { top: 4, left: 6, size: 300, type: "circle", anim: 0, outline: "lg" },
+  { top: 7, left: 94, size: 280, type: "rounded", anim: 1, outline: "md", rotate: -12 },
+  { top: 11, left: 42, size: 160, type: "diamond", anim: 2, outline: "sm" },
+  { top: 15, left: 72, size: 220, type: "circle", anim: 3, outline: "md" },
+  { top: 19, left: 18, size: 200, type: "pill", anim: 4, outline: "lg" },
+  { top: 23, left: 58, size: 140, type: "square", anim: 0, outline: "sm", rotate: 8 },
+  { top: 27, left: 88, size: 260, type: "circle", anim: 1, outline: "md" },
+  { top: 31, left: 28, size: 180, type: "rounded", anim: 2, outline: "lg", rotate: 14 },
+  { top: 35, left: 50, size: 120, type: "diamond", anim: 3, outline: "md" },
+  { top: 39, left: 8, size: 320, type: "circle", anim: 4, outline: "lg" },
+  { top: 43, left: 82, size: 170, type: "square", anim: 0, outline: "sm", rotate: -10 },
+  { top: 47, left: 35, size: 240, type: "circle", anim: 1, outline: "md" },
+  { top: 51, left: 65, size: 150, type: "pill", anim: 2, outline: "lg" },
+  { top: 55, left: 92, size: 200, type: "rounded", anim: 3, outline: "sm", rotate: -18 },
+  { top: 59, left: 14, size: 260, type: "circle", anim: 4, outline: "md" },
+  { top: 63, left: 48, size: 130, type: "square", anim: 0, outline: "lg", rotate: 22 },
+  { top: 67, left: 76, size: 290, type: "circle", anim: 1, outline: "md" },
+  { top: 71, left: 22, size: 160, type: "diamond", anim: 2, outline: "sm" },
+  { top: 75, left: 55, size: 220, type: "rounded", anim: 3, outline: "lg", rotate: 6 },
+  { top: 79, left: 86, size: 180, type: "circle", anim: 4, outline: "md" },
+  { top: 83, left: 10, size: 140, type: "pill", anim: 0, outline: "sm" },
+  { top: 87, left: 38, size: 250, type: "circle", anim: 1, outline: "lg" },
+  { top: 90, left: 68, size: 170, type: "square", anim: 2, outline: "md", rotate: -16 },
+  { top: 93, left: 52, size: 110, type: "diamond", anim: 3, outline: "sm" },
+  { top: 96, left: 24, size: 200, type: "rounded", anim: 4, outline: "lg", rotate: 12 },
+  { top: 97, left: 90, size: 280, type: "circle", anim: 0, outline: "md" },
+] as const;
+
+function landingShapeRadius(type: (typeof LANDING_SHAPES)[number]["type"]) {
+  switch (type) {
+    case "circle":
+    case "pill":
+      return "rounded-full";
+    case "square":
+      return "rounded-xl";
+    case "rounded":
+      return "rounded-[2rem]";
+    case "diamond":
+      return "rounded-2xl";
+  }
+}
+
+function LandingDecorations() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      {LANDING_SHAPES.map((shape, i) => {
+        const isPill = shape.type === "pill";
+        const isDiamond = shape.type === "diamond";
+        const extraRotate = "rotate" in shape && shape.rotate ? shape.rotate : 0;
+        const size = `clamp(8rem, 22vw, ${shape.size}px)`;
+        const pillWidth = `clamp(10rem, 28vw, ${Math.round(shape.size * 1.65)}px)`;
+        const pillHeight = `clamp(3.5rem, 8vw, ${Math.round(shape.size * 0.42)}px)`;
+
+        return (
+          <div
+            key={i}
+            className={`absolute landing-shape-drift-${shape.anim}`}
+            style={{
+              top: `${shape.top}%`,
+              left: `${shape.left}%`,
+              animationDelay: `${i * 1.4}s`,
+            }}
+          >
+            <div
+              className={`border-2 ${landingShapeRadius(shape.type)} ${LANDING_OUTLINE_STYLES[shape.outline]}`}
+              style={{
+                width: isPill ? pillWidth : size,
+                height: isPill ? pillHeight : size,
+                transform: `translate(-50%, -50%)${isDiamond ? " rotate(45deg)" : extraRotate ? ` rotate(${extraRotate}deg)` : ""}`,
+              }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
-      <Nav />
-      <Hero />
-      <Features />
-      <Installments />
-      <HowItWorks />
-      <ForCompanies />
-      <CTA />
-      <Footer />
+    <div className="relative min-h-screen overflow-x-hidden bg-landing text-white antialiased">
+      <div className="relative min-h-screen">
+        <LandingDecorations />
+
+        <div className="relative z-[1]">
+        <Nav />
+        <Hero />
+        <ImpactMetrics />
+        <CorporateBenefits />
+        <Features />
+        <Installments />
+        <HowItWorks />
+        <ForCompanies />
+        <CTA />
+        <Footer />
+        </div>
+      </div>
     </div>
   );
 }
@@ -93,105 +397,402 @@ function Reveal({
   );
 }
 
+/* ---------- Section activation (scroll + nav hash) ---------- */
+function useSectionActivation(sectionId: string) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [active, setActive] = useState(false);
+
+  const trigger = useCallback(() => {
+    setActive(false);
+    window.setTimeout(() => setActive(true), 60);
+  }, []);
+
+  const reset = useCallback(() => setActive(false), []);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) trigger();
+        else reset();
+      },
+      { threshold: 0.16, rootMargin: "0px 0px -48px 0px" }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [trigger, reset]);
+
+  useEffect(() => {
+    const hash = `#${sectionId}`;
+
+    const onHash = () => {
+      if (window.location.hash === hash) trigger();
+    };
+
+    const onNavClick = (event: MouseEvent) => {
+      const target = (event.target as HTMLElement).closest(`a[href="${hash}"]`);
+      if (target) window.setTimeout(trigger, 320);
+    };
+
+    if (window.location.hash === hash) trigger();
+
+    window.addEventListener("hashchange", onHash);
+    document.addEventListener("click", onNavClick);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      document.removeEventListener("click", onNavClick);
+    };
+  }, [sectionId, trigger]);
+
+  return { sectionRef, active };
+}
+
 /* ---------- Logo ---------- */
-function Logo() {
+function Logo({ inverted = false }: { inverted?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
       <div
-        className="flex h-10 w-10 items-center justify-center rounded-xl text-primary-foreground font-bold text-lg shadow-[var(--shadow-brand)]"
-        style={{ background: "var(--gradient-brand)" }}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold sm:h-10 sm:w-10 sm:text-lg ${
+          inverted
+            ? "text-primary-foreground shadow-[var(--shadow-orb)]"
+            : "text-primary-foreground shadow-[var(--shadow-brand)]"
+        }`}
+        style={{
+          background: inverted ? "var(--gradient-orb)" : "var(--gradient-brand)",
+        }}
       >
         A
       </div>
-      <span className="text-lg font-semibold tracking-tight">AdeCerebiia</span>
+      <span
+        className={`truncate text-base font-semibold tracking-tight sm:text-lg ${
+          inverted ? "text-white" : "text-foreground"
+        }`}
+      >
+        AdeCerebiia
+      </span>
     </div>
   );
 }
 
 /* ---------- Nav ---------- */
-function Nav() {
+function NavCardLink({
+  href,
+  label,
+  icon: Icon,
+  onClick,
+  index = 0,
+  className = "",
+  mobile = false,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  index?: number;
+  className?: string;
+  mobile?: boolean;
+}) {
+  const iconAnim =
+    NAV_ICON_HOVER_ANIM[href as keyof typeof NAV_ICON_HOVER_ANIM] ?? "nav-icon-anim-home";
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Logo />
-        <nav className="hidden items-center gap-8 md:flex">
-          <a href="#producto" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Beneficios</a>
-          <a href="#cuotas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pagos a cuotas</a>
-          <a href="#como-funciona" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cómo funciona</a>
-          <a href="#empresas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Para empresas</a>
-        </nav>
-        <div className="flex items-center gap-3">
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-primary-foreground shadow-[var(--shadow-brand)] transition-transform hover:scale-[1.03]"
-            style={{ background: "var(--gradient-brand)" }}
+    <a
+      href={href}
+      title={label}
+      onClick={onClick}
+      style={mobile ? undefined : { animationDelay: `${index * 70}ms` }}
+      className={`nav-card-link ${mobile ? "" : "nav-item-enter"} group flex w-full min-w-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/5 px-1.5 py-2 text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:border-white/20 hover:bg-white/10 ${mobile ? "mobile-nav-card mobile-nav-item" : ""} ${className}`}
+    >
+      <span className={`nav-card-icon inline-flex ${iconAnim}`}>
+        <Icon
+          className="nav-card-icon-svg h-5 w-5 text-white/80 transition-all duration-300 sm:h-[22px] sm:w-[22px]"
+          strokeWidth={2.25}
+          aria-hidden
+        />
+      </span>
+      <span className="mt-1.5 max-w-full text-center text-[10px] font-medium leading-tight text-white/80 transition-colors duration-300 group-hover:text-white sm:text-[11px]">
+        {label}
+      </span>
+    </a>
+  );
+}
+
+function NavAuthButtons({
+  className = "",
+  stacked = false,
+  onNavigate,
+}: {
+  className?: string;
+  stacked?: boolean;
+  onNavigate?: () => void;
+}) {
+  const visibility = stacked ? "inline-flex" : "hidden lg:inline-flex";
+
+  return (
+    <div
+      className={`flex items-center gap-3 ${stacked ? "w-full flex-col" : ""} ${className}`}
+    >
+      <a
+        href={LOGIN_URL}
+        onClick={onNavigate}
+        className={`${visibility} items-center justify-center text-xs font-medium text-white/90 transition-all duration-300 hover:translate-x-0.5 hover:text-white sm:text-sm ${stacked ? "mobile-sheet-footer-item mobile-sheet-login w-full py-2.5" : "px-1"}`}
+      >
+        Inicia sesión
+      </a>
+      <a
+        href={REGISTER_URL}
+        onClick={onNavigate}
+        className={`${visibility} nav-btn-lift mobile-sheet-footer-item mobile-sheet-register items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-orb)] transition-all hover:shadow-[var(--shadow-cta-white)] sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "w-full" : ""}`}
+        style={{ background: "var(--gradient-orb)" }}
+      >
+        Regístrate
+      </a>
+    </div>
+  );
+}
+
+function NavCta({
+  className = "",
+  stacked = false,
+  onNavigate,
+}: {
+  className?: string;
+  stacked?: boolean;
+  onNavigate?: () => void;
+}) {
+  const visibility = stacked ? "inline-flex" : "hidden lg:inline-flex";
+
+  return (
+    <a
+      href={WHATSAPP_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onNavigate}
+      className={`nav-cta-group ${visibility} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`}
+    >
+      Contáctanos
+      <ArrowRight className="nav-arrow-slide h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+    </a>
+  );
+}
+
+function Nav() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [navCardsOpen, setNavCardsOpen] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+  const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header
+      className={`nav-header-enter sticky top-0 z-40 w-full border-b border-white/15 bg-white/8 text-white backdrop-blur-xl transition-shadow duration-500 ${
+        scrolled ? "border-white/20 bg-white/12 shadow-[0_8px_40px_rgba(15,23,42,0.22)]" : ""
+      }`}
+    >
+      <div className="mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8 lg:py-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+            <a
+              href="#inicio"
+              className="nav-logo-hover shrink-0"
+              aria-label="AdeCerebiia — inicio"
+            >
+              <Logo inverted />
+            </a>
+            <button
+              type="button"
+              aria-expanded={navCardsOpen}
+              aria-controls="nav-cards-menu"
+              onClick={() => setNavCardsOpen((open) => !open)}
+              className="nav-cards-toggle hidden h-6 w-6 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors duration-200 hover:text-white/75 lg:inline-flex"
+              aria-label={navCardsOpen ? "Ocultar menú de navegación" : "Mostrar menú de navegación"}
+            >
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform duration-300 ${navCardsOpen ? "rotate-180" : ""}`}
+                strokeWidth={2.25}
+              />
+            </button>
+          </div>
+
+          <div
+            className="nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5"
+            style={{ animationDelay: "350ms" }}
           >
-            Solicitar demo
-            <ArrowRight className="h-4 w-4" />
-          </a>
+            <NavAuthButtons />
+            <NavCta />
+
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  aria-expanded={mobileOpen}
+                  className="nav-menu-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:bg-white/20 lg:hidden sm:h-10 sm:w-10"
+                  aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+                >
+                  {mobileOpen ? (
+                    <X className="nav-menu-icon h-5 w-5" />
+                  ) : (
+                    <Menu className="nav-menu-icon h-5 w-5" />
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="mobile-sheet flex w-[min(100vw,22rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 border-l border-white/15 bg-white/8 p-0 text-white shadow-[-8px_0_40px_rgba(15,23,42,0.35)] backdrop-blur-2xl"
+              >
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,hsl(265_55%_55%_/_0.18),transparent_55%)]" aria-hidden />
+
+                <SheetHeader className="mobile-sheet-header relative border-b border-white/15 px-4 py-4 text-left sm:px-6 sm:py-5">
+                  <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
+                  <Logo inverted />
+                </SheetHeader>
+
+                <nav
+                  className="mobile-sheet-nav relative grid grid-cols-2 gap-3 p-4 sm:grid-cols-2"
+                  aria-label="Menú móvil"
+                >
+                  {NAV_LINKS.map((link, i) => (
+                    <NavCardLink
+                      key={link.href}
+                      {...link}
+                      index={i}
+                      mobile
+                      className="min-w-0 w-full py-3.5"
+                      onClick={(event) =>
+                        handleMobileNavClick(link.href, closeMobileMenu, event)
+                      }
+                    />
+                  ))}
+                </nav>
+
+                <div className="mobile-sheet-footer relative mt-auto space-y-3 border-t border-white/15 p-4">
+                  <NavAuthButtons stacked onNavigate={closeMobileMenu} />
+                  <NavCta stacked className="justify-center" onNavigate={closeMobileMenu} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
+
+        <nav
+          id="nav-cards-menu"
+          aria-label="Navegación principal"
+          className={`nav-cards-panel hidden w-full overflow-hidden transition-all duration-300 ease-out lg:grid lg:grid-cols-5 lg:gap-1.5 xl:gap-2 ${
+            navCardsOpen
+              ? "mt-2 max-h-28 opacity-100 xl:mt-2.5"
+              : "mt-0 max-h-0 opacity-0 pointer-events-none"
+          }`}
+        >
+          {NAV_LINKS.map((link, i) => (
+            <NavCardLink key={link.href} {...link} index={i} />
+          ))}
+        </nav>
       </div>
     </header>
   );
 }
 
 /* ---------- Hero ---------- */
+const HERO_HIGHLIGHTS = [
+  {
+    icon: Bolt,
+    title: "Disponible al instante",
+    desc: "Accede a tu salario ganado cuando lo necesites, sin trámites.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Totalmente seguro",
+    desc: "Tus datos y transacciones protegidos con los más altos estándares.",
+  },
+  {
+    icon: Banknote,
+    title: "Hasta 3 cuotas",
+    desc: "Paga con flexibilidad en 1, 2 o 3 cuotas desde tu nómina.",
+  },
+] as const;
+
+function HeroHighlight({
+  icon,
+  title,
+  desc,
+}: {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <GlassCard className="flex items-start gap-3.5 p-4 sm:gap-4 sm:p-5" hover>
+      <BrandIcon icon={icon} size="md" variant="orb" />
+      <div className="min-w-0 pt-0.5">
+        <div className="text-sm font-semibold text-white sm:text-base">{title}</div>
+        <div className="mt-0.5 text-xs leading-relaxed text-white/70 sm:text-sm">{desc}</div>
+      </div>
+    </GlassCard>
+  );
+}
+
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-soft)" }} />
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full opacity-30 blur-3xl" style={{ background: "var(--gradient-brand)" }} />
-        <div className="absolute top-40 -left-24 h-80 w-80 rounded-full opacity-20 blur-3xl bg-primary" />
-      </div>
-
-      <div className="mx-auto max-w-7xl px-6 pt-20 pb-28 lg:pt-28 lg:pb-36">
-        <div className="grid items-center gap-16 lg:grid-cols-2">
+    <section id="inicio" className="relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 pt-6 pb-14 sm:px-6 sm:pt-8 sm:pb-20 lg:pt-8 lg:pb-24">
+        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <Reveal>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1.5 text-xs font-medium text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              Plataforma de adelantos de nómina
-            </div>
-            <h1 className="mt-6 text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
-              Tu dinero,
-              <br />
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-brand)" }}>
-                a tu ritmo.
-              </span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Ofrece a tus empleados acceso al salario que ya ganaron,
-              con la flexibilidad de pagarlo hasta en 3 cuotas. La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-[var(--shadow-brand)] transition-transform hover:scale-[1.02]"
-                style={{ background: "var(--gradient-brand)" }}
-              >
-                Solicitar demo
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href="#como-funciona"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-muted"
-              >
-                Ver cómo funciona
-              </a>
-            </div>
-            <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Sin costo para la empresa</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Tarifa fija: $8.000 por adelanto</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-primary" /> Hasta 3 cuotas</div>
+            <div className="relative max-w-xl py-2 sm:py-4 lg:py-2">
+              <div className="lg:hidden">
+                <Logo inverted />
+              </div>
+              <div className="section-badge mt-6 sm:mt-6 lg:mt-0">
+                Plataforma de adelantos de nómina
+              </div>
+              <h1 className="mt-5 text-[1.75rem] font-bold leading-[1.12] tracking-tight text-white sm:mt-6 sm:text-4xl sm:leading-[1.08] lg:text-5xl">
+                Tu dinero,
+                <br />
+                <span className="text-gradient-soft">a tu ritmo.</span>
+              </h1>
+              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 sm:text-base">
+                Ofrece a tus empleados acceso al salario que ya ganaron, con la flexibilidad de
+                pagarlo hasta en 3 cuotas. La empresa no paga nada.
+              </p>
+
+              <div className="mt-8 space-y-4 sm:space-y-5">
+                {HERO_HIGHLIGHTS.map((item) => (
+                  <HeroHighlight key={item.title} {...item} />
+                ))}
+              </div>
+
+              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap">
+                <GlassButtonPrimary
+                  href={REGISTER_URL}
+                  className="w-full justify-center gap-2 sm:w-auto"
+                >
+                  Regístrate gratis
+                  <ArrowRight className="h-4 w-4" />
+                </GlassButtonPrimary>
+                <GlassButtonSecondary
+                  href={LOGIN_URL}
+                  className="w-full justify-center gap-2 sm:w-auto"
+                >
+                  Inicia sesión
+                </GlassButtonSecondary>
+              </div>
             </div>
           </Reveal>
 
           <Reveal delay={150}>
-            <TrustOrb />
+            <div className="relative flex min-h-[320px] items-center justify-center sm:min-h-[420px] lg:min-h-full">
+              <div className="relative w-full max-w-sm">
+                <TrustOrb />
+              </div>
+            </div>
           </Reveal>
         </div>
       </div>
@@ -202,11 +803,11 @@ function Hero() {
 /* ---------- Hero visual: refined, calm, premium ---------- */
 function TrustOrb() {
   return (
-    <div className="relative mx-auto aspect-[5/6] w-full max-w-[480px]">
+    <div className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]">
       {/* Soft ambient glow */}
       <div
-        className="absolute -inset-10 -z-10 rounded-[3rem] opacity-40 blur-3xl"
-        style={{ background: "var(--gradient-brand)" }}
+        className="absolute -inset-6 -z-10 rounded-[3rem] opacity-40 blur-3xl sm:-inset-10"
+        style={{ background: "var(--gradient-orb)" }}
       />
       {/* Subtle dotted grid */}
       <div
@@ -220,14 +821,14 @@ function TrustOrb() {
 
       {/* Back card — depth */}
       <div
-        className="absolute left-1/2 top-6 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-border/70 bg-card/60 backdrop-blur-sm"
+        className="absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-md sm:top-6"
         style={{ transform: "translate(-46%, 0) rotate(-5deg)" }}
       />
 
       {/* Main brand card */}
       <div
-        className="relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-3xl p-8 text-primary-foreground shadow-[var(--shadow-brand)] animate-float-slow"
-        style={{ background: "var(--gradient-hero)" }}
+        className="relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl p-5 text-primary-foreground shadow-[var(--shadow-orb)] animate-float-slow sm:rounded-3xl sm:p-8"
+        style={{ background: "var(--gradient-orb)" }}
       >
         {/* Decorative rings */}
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/15" />
@@ -252,59 +853,47 @@ function TrustOrb() {
         </div>
 
         {/* Brand emblem with pulse */}
-        <div className="relative mx-auto mt-10 flex h-40 w-40 items-center justify-center">
+        <div className="relative mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40">
           <span className="absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring" />
           <span
             className="absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring"
             style={{ animationDelay: "1.2s" }}
           />
-          <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-white/15 backdrop-blur-md ring-1 ring-white/25">
-            <Shield className="h-12 w-12" strokeWidth={1.6} />
-            <span className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-primary shadow-lg">
-              <CheckCircle2 className="h-5 w-5" strokeWidth={2.2} />
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.2)] ring-4 ring-white/30 sm:h-28 sm:w-28">
+            <ShieldCheck className="h-9 w-9 text-accent sm:h-11 sm:w-11" strokeWidth={2.25} />
+            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-accent shadow-lg ring-2 ring-accent/20 sm:h-9 sm:w-9">
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
             </span>
           </div>
         </div>
 
         {/* Tagline */}
-        <div className="mt-10 text-center">
-          <div className="text-[11px] font-medium uppercase tracking-[0.2em] opacity-70">
+        <div className="mt-6 text-center sm:mt-10">
+          <div className="text-[10px] font-medium uppercase tracking-[0.2em] opacity-70 sm:text-[11px]">
             Confianza · Bienestar
           </div>
-          <div className="mt-2 text-2xl font-bold leading-tight">
+          <div className="mt-2 text-xl font-bold leading-tight sm:text-2xl">
             Adelantos seguros<br />para tu equipo
           </div>
         </div>
 
         {/* Mini trust rail */}
-        <div className="mt-8 grid grid-cols-3 gap-2 border-t border-white/20 pt-5 text-center">
+        <div className="mt-6 grid grid-cols-3 gap-1.5 border-t border-white/20 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5">
           <TrustStat label="Cuotas" value="Hasta 3" />
           <TrustStat label="Costo empresa" value="$0" />
           <TrustStat label="Tarifa" value="$8.000" />
         </div>
       </div>
 
-      {/* Floating accent chips */}
-      <div className="absolute -left-4 top-24 animate-float">
-        <FloatingChip
-          icon={<HeartHandshake className="h-4 w-4" />}
-          title="Sin riesgo"
-          sub="Para tu empresa"
-        />
+      {/* Floating accent chips — hidden on narrow mobile to avoid overflow */}
+      <div className="absolute -left-4 top-24 hidden animate-float sm:block">
+        <FloatingChip icon={HeartHandshake} title="Sin riesgo" sub="Para tu empresa" />
       </div>
-      <div className="absolute -right-4 bottom-28 animate-float-slow" style={{ animationDelay: "0.6s" }}>
-        <FloatingChip
-          icon={<CalendarClock className="h-4 w-4" />}
-          title="Hasta 3 cuotas"
-          sub="Flexibilidad de pago"
-        />
+      <div className="absolute -right-4 bottom-28 hidden animate-float-slow sm:block" style={{ animationDelay: "0.6s" }}>
+        <FloatingChip icon={CalendarDays} title="Hasta 3 cuotas" sub="Flexibilidad de pago" />
       </div>
-      <div className="absolute -left-2 bottom-10 animate-float-slow" style={{ animationDelay: "1.1s" }}>
-        <FloatingChip
-          icon={<PiggyBank className="h-4 w-4" />}
-          title="Tarifa fija"
-          sub="$8.000 por adelanto"
-        />
+      <div className="absolute -left-2 bottom-10 hidden animate-float-slow sm:block" style={{ animationDelay: "1.1s" }}>
+        <FloatingChip icon={Banknote} title="Tarifa fija" sub="$8.000 por adelanto" />
       </div>
     </div>
   );
@@ -326,7 +915,7 @@ function FloatingChip({
   className = "",
   style,
 }: {
-  icon: ReactNode;
+  icon: LucideIcon;
   title: string;
   sub: string;
   className?: string;
@@ -334,63 +923,225 @@ function FloatingChip({
 }) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border border-border bg-card/95 px-3.5 py-2.5 backdrop-blur-sm shadow-[var(--shadow-card)] ${className}`}
+      className={`glass-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`}
       style={style}
     >
-      <div
-        className="flex h-9 w-9 items-center justify-center rounded-xl text-primary-foreground"
-        style={{ background: "var(--gradient-brand)" }}
-      >
-        {icon}
-      </div>
-      <div className="pr-1">
-        <div className="text-sm font-semibold leading-tight">{title}</div>
-        <div className="text-[11px] text-muted-foreground">{sub}</div>
+      <BrandIcon icon={icon} size="sm" variant="orb" />
+      <div className="min-w-0 pr-1">
+        <div className="text-xs font-semibold leading-tight text-white sm:text-sm">{title}</div>
+        <div className="text-[10px] text-white/60 sm:text-[11px]">{sub}</div>
       </div>
     </div>
+  );
+}
+
+/* ---------- Impact Metrics ---------- */
+const IMPACT_METRICS = [
+  { target: 70, prefix: "", suffix: "%", label: "Estrés Financiero" },
+  { target: -16, prefix: "", suffix: "%", label: "Rotación de Personal" },
+  { target: 0, prefix: "$", suffix: "", label: "Costo Organizacional" },
+] as const;
+
+type ImpactMetric = (typeof IMPACT_METRICS)[number];
+
+function formatMetricValue(value: number, metric: ImpactMetric) {
+  const rounded = Math.round(value);
+  return `${metric.prefix}${rounded}${metric.suffix}`;
+}
+
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3;
+}
+
+function CountUpMetric({
+  metric,
+  duration = 1600,
+}: {
+  metric: ImpactMetric;
+  duration?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const [display, setDisplay] = useState(() => formatMetricValue(0, metric));
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const startValue = 0;
+    const { target } = metric;
+
+    const cancel = () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+    };
+
+    const runCount = () => {
+      cancel();
+
+      if (reducedMotion) {
+        setDisplay(formatMetricValue(target, metric));
+        return;
+      }
+
+      const startTime = performance.now();
+
+      const tick = (now: number) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = easeOutCubic(progress);
+        const current = startValue + (target - startValue) * eased;
+        setDisplay(formatMetricValue(current, metric));
+
+        if (progress < 1) {
+          frameRef.current = requestAnimationFrame(tick);
+        } else {
+          frameRef.current = null;
+        }
+      };
+
+      frameRef.current = requestAnimationFrame(tick);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setDisplay(formatMetricValue(startValue, metric));
+            runCount();
+          } else {
+            cancel();
+            setDisplay(formatMetricValue(startValue, metric));
+          }
+        }
+      },
+      { threshold: 0.4, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    io.observe(el);
+    return () => {
+      cancel();
+      io.disconnect();
+    };
+  }, [metric, duration]);
+
+  return (
+    <span
+      ref={ref}
+      className="tabular-nums text-gradient-metric"
+    >
+      {display}
+    </span>
+  );
+}
+
+function ImpactMetrics() {
+  return (
+    <section className="section-shell">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          {IMPACT_METRICS.map((metric, i) => (
+            <Reveal key={metric.label} delay={i * 100}>
+              <GlassCard className="p-8 text-center sm:p-10" hover>
+                <div className="text-4xl font-extrabold sm:text-5xl">
+                  <CountUpMetric metric={metric} />
+                </div>
+                <p className="mt-3 text-sm font-medium tracking-wide text-white/70">
+                  {metric.label}
+                </p>
+              </GlassCard>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Corporate Benefits ---------- */
+const CORPORATE_BENEFITS = [
+  {
+    icon: Users,
+    title: "Retención de talento clave",
+    desc: "Fortalece la propuesta de valor para tus colaboradores con un beneficio financiero tangible que impacta directamente en la permanencia del equipo.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Mayor productividad operativa",
+    desc: "Reduce el ausentismo y el estrés financiero del personal, mejorando el foco, la asistencia y el desempeño en operaciones críticas.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Cero riesgo para la empresa",
+    desc: "Implementación sin costo organizacional, sin endeudamiento corporativo y con trazabilidad completa en cada adelanto descontado por nómina.",
+  },
+] as const;
+
+function CorporateBenefits() {
+  return (
+    <section className="section-shell">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <Reveal>
+          <SectionHeader
+            title="Diseñado para optimizar tus Recursos Humanos"
+            subtitle="Un beneficio financiero que fortalece tu equipo sin costo para la organización."
+          />
+        </Reveal>
+
+        <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+          {CORPORATE_BENEFITS.map(({ icon: Icon, title, desc }, i) => (
+            <Reveal key={title} delay={i * 100}>
+              <GlassCard as="article" className="h-full p-6 sm:p-7" hover>
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl shadow-[var(--shadow-orb)]" style={{ background: "var(--gradient-orb)" }}>
+                  <Icon className="h-6 w-6 text-white" strokeWidth={2.25} aria-hidden />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-white sm:text-xl">{title}</h3>
+                <p className="text-sm leading-relaxed text-white/70">{desc}</p>
+              </GlassCard>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
 /* ---------- Features (beneficios) ---------- */
 function Features() {
   const items = [
-    { icon: Zap, title: "Solicitud en segundos", desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten." },
-    { icon: CalendarClock, title: "Pagos hasta en 3 cuotas", desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado." },
-    { icon: Shield, title: "Cero riesgo para la empresa", desc: "La empresa no paga nada. El empleado asume una tarifa fija de $8.000 por adelanto." },
-    { icon: HeartHandshake, title: "Retención de talento", desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo." },
-    { icon: PiggyBank, title: "Bienestar financiero", desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses." },
+    { icon: Bolt, title: "Solicitud en segundos", desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten." },
+    { icon: CalendarDays, title: "Pagos hasta en 3 cuotas", desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado." },
+    { icon: ShieldCheck, title: "Cero riesgo para la empresa", desc: "La empresa no paga nada. El empleado asume una tarifa fija de $8.000 por adelanto." },
+    { icon: Users, title: "Retención de talento", desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo." },
+    { icon: TrendingUp, title: "Bienestar financiero", desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses." },
     { icon: Smartphone, title: "100% digital", desc: "Sin papeleos ni trámites. Tus empleados solicitan desde su móvil en cualquier momento." },
   ];
   return (
-    <section id="producto" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6">
+    <section id="producto" className="section-shell">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              Beneficios
-            </div>
-            <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-              Bienestar para tu equipo, tranquilidad para tu empresa
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Una solución integral donde la empresa no asume costos y el empleado accede a su salario ganado de forma flexible.
-            </p>
-          </div>
+          <SectionHeader
+            badge="Beneficios"
+            title="Bienestar para tu equipo, tranquilidad para tu empresa"
+            subtitle="Una solución integral donde la empresa no asume costos y el empleado accede a su salario ganado de forma flexible."
+          />
         </Reveal>
 
-        <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:mt-14 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {items.map(({ icon: Icon, title, desc }, i) => (
             <Reveal key={title} delay={i * 80}>
-              <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card p-7 transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-card)]">
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-xl text-primary-foreground shadow-[var(--shadow-brand)] transition-transform duration-500 group-hover:scale-110"
-                  style={{ background: "var(--gradient-brand)" }}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{desc}</p>
-              </div>
+              <GlassCard as="article" className="group h-full p-5 sm:p-7" hover>
+                <BrandIcon
+                  icon={Icon}
+                  size="lg"
+                  variant="orb"
+                  className="group-hover:scale-105 group-hover:shadow-[0_0_32px_hsl(265_55%_55%_/_0.4)]"
+                />
+                <h3 className="mt-5 text-lg font-semibold text-white">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/70">{desc}</p>
+              </GlassCard>
             </Reveal>
           ))}
         </div>
@@ -400,30 +1151,111 @@ function Features() {
 }
 
 /* ---------- Installments (cuotas) ---------- */
-function Installments() {
-  const cuotas = [
-    { n: "1", label: "Cuota única", desc: "Se descuenta en la siguiente nómina." },
-    { n: "2", label: "2 cuotas", desc: "Distribuido en las próximas dos nóminas." },
-    { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el empleado." },
-  ];
+const CUOTAS_STEPS = [
+  { n: "1", label: "Cuota única", desc: "Se descuenta en la siguiente nómina." },
+  { n: "2", label: "2 cuotas", desc: "Distribuido en las próximas dos nóminas." },
+  { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el empleado." },
+] as const;
+
+function CuotasTimelineFigure({ n }: { n: string }) {
   return (
-    <section id="cuotas" className="relative overflow-hidden py-24 sm:py-32">
-      <div className="absolute inset-0 -z-10" style={{ background: "var(--gradient-soft)" }} />
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-16 lg:grid-cols-2">
-          <Reveal>
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              <CalendarClock className="h-3.5 w-3.5" />
-              Pagos a cuotas
+    <div className="cuotas-timeline-figure relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500">
+      <div
+        className="flex h-full w-full items-center justify-center rounded-xl"
+        style={{ background: "var(--gradient-orb)" }}
+      >
+        {n}
+      </div>
+    </div>
+  );
+}
+
+function CuotasTimelineCard({ label, desc }: { label: string; desc: string }) {
+  return (
+    <GlassCard
+      as="article"
+      className="w-full p-5 text-center sm:p-6"
+      hover
+    >
+      <div className="text-lg font-semibold text-white">{label}</div>
+      <div className="mt-1 text-sm text-white/70">{desc}</div>
+    </GlassCard>
+  );
+}
+
+function CuotasTimeline() {
+  return (
+    <div className="cuotas-timeline group/timeline relative">
+      {/* Desktop: pasos en columna (figura + card) con línea en el centro de las figuras */}
+      <div className="relative hidden sm:block">
+        <div className="pointer-events-none absolute inset-x-0 top-7 z-0 h-0.5" aria-hidden>
+          <div
+            className="cuotas-timeline-segment cuotas-timeline-segment-1 absolute top-0 h-full"
+            style={{ left: "16.666%", width: "33.333%" }}
+          >
+            <div className="h-full rounded-full bg-white/15" />
+            <div className="cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50" />
+          </div>
+          <div
+            className="cuotas-timeline-segment cuotas-timeline-segment-2 absolute top-0 h-full"
+            style={{ left: "50%", width: "33.333%" }}
+          >
+            <div className="h-full rounded-full bg-white/15" />
+            <div className="cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50" />
+          </div>
+        </div>
+
+        <div className="relative z-10 grid grid-cols-3 gap-4">
+          {CUOTAS_STEPS.map((step, i) => (
+            <div
+              key={step.n}
+              className="cuotas-timeline-step group/step flex flex-col items-center"
+            >
+              <CuotasTimelineFigure n={step.n} />
+              <div className="mt-4 w-full">
+                <CuotasTimelineCard label={step.label} desc={step.desc} />
+              </div>
             </div>
-            <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile: pasos verticales con conector entre centros de figura */}
+      <div className="flex flex-col items-center sm:hidden">
+        {CUOTAS_STEPS.map((step, i) => (
+          <div key={step.n} className="cuotas-timeline-step group/step flex w-full max-w-sm flex-col items-center">
+            <CuotasTimelineFigure n={step.n} />
+            <div className="mt-4 w-full">
+              <CuotasTimelineCard label={step.label} desc={step.desc} />
+            </div>
+            {i < CUOTAS_STEPS.length - 1 && (
+              <div className="relative my-3 flex h-12 w-0.5 shrink-0" aria-hidden>
+                <div className="h-full w-full rounded-full bg-white/15" />
+                <div className="cuotas-timeline-segment-fill-v absolute inset-0 origin-top scale-y-0 rounded-full bg-gradient-to-b from-white/50 via-white to-white/50" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Installments() {
+  return (
+    <section id="cuotas" className="section-shell relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid items-center gap-10 sm:gap-16 lg:grid-cols-2">
+          <Reveal>
+            <SectionBadge>Pagos a cuotas</SectionBadge>
+            <h2 className="section-title mt-4 text-left">
               Flexibilidad real para tus empleados
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="section-subtitle mt-4 text-left">
               Cada adelanto puede pagarse hasta en 3 cuotas, ajustándose al momento financiero del empleado.
               La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.
             </p>
-            <ul className="mt-8 space-y-3">
+            <ul className="mt-6 space-y-3 sm:mt-8">
               {[
                 "Descuento por nómina, sin gestión manual para tu empresa",
                 "El empleado elige entre 1, 2 o 3 cuotas según su flujo",
@@ -432,32 +1264,15 @@ function Installments() {
                 "Sin intereses ocultos ni letra pequeña",
               ].map((b) => (
                 <li key={b} className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
-                  <span className="text-foreground">{b}</span>
+                  <CheckIcon light />
+                  <span className="text-sm text-white/90 sm:text-base">{b}</span>
                 </li>
               ))}
             </ul>
           </Reveal>
 
           <Reveal delay={150}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {cuotas.map((c, i) => (
-                <div
-                  key={c.label}
-                  className="group rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)] transition-all duration-500 hover:-translate-y-1.5"
-                  style={{ transitionDelay: `${i * 60}ms` }}
-                >
-                  <div
-                    className="inline-flex h-12 w-12 items-center justify-center rounded-xl text-xl font-bold text-primary-foreground shadow-[var(--shadow-brand)]"
-                    style={{ background: "var(--gradient-brand)" }}
-                  >
-                    {c.n}
-                  </div>
-                  <div className="mt-4 text-lg font-semibold">{c.label}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">{c.desc}</div>
-                </div>
-              ))}
-            </div>
+            <CuotasTimeline />
           </Reveal>
         </div>
       </div>
@@ -466,43 +1281,115 @@ function Installments() {
 }
 
 /* ---------- How it works ---------- */
-function HowItWorks() {
-  const steps = [
-    { n: "01", title: "Conecta tu nómina", desc: "Integramos AdeCerebiia con tu sistema de nómina en días." },
-    { n: "02", title: "Activa a tus empleados", desc: "Cada empleado recibe acceso a su panel personal." },
-    { n: "03", title: "Solicitan desde la app", desc: "Piden el adelanto y eligen entre 1, 2 o 3 cuotas. La solicitud llega al panel de Cerebiia." },
-    { n: "04", title: "Pagamos y descontamos", desc: "Nuestro equipo procesa y desembolsa el adelanto. Las cuotas se descuentan de la nómina sin trabajo extra para ti." },
-  ];
-  return (
-    <section id="como-funciona" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6">
-        <Reveal>
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              Cómo funciona
-            </div>
-            <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-              Implementación simple. Impacto inmediato.
-            </h2>
-          </div>
-        </Reveal>
+const HOW_IT_WORKS_STEPS = [
+  { n: "01", title: "Conecta tu nómina", desc: "Integramos AdeCerebiia con tu sistema de nómina en días." },
+  { n: "02", title: "Activa a tus empleados", desc: "Cada empleado recibe acceso a su panel personal." },
+  { n: "03", title: "Solicitan desde la app", desc: "Piden el adelanto y eligen entre 1, 2 o 3 cuotas. La solicitud llega al panel de Cerebiia." },
+  { n: "04", title: "Pagamos y descontamos", desc: "Nuestro equipo procesa y desembolsa el adelanto. Las cuotas se descuentan de la nómina sin trabajo extra para ti." },
+] as const;
 
-        <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {steps.map((s, i) => (
-            <Reveal key={s.n} delay={i * 100}>
-              <div className="h-full rounded-2xl border border-border bg-card p-7 shadow-[var(--shadow-card)] transition-transform duration-500 hover:-translate-y-1">
-                <div
-                  className="text-3xl font-bold bg-clip-text text-transparent"
-                  style={{ backgroundImage: "var(--gradient-brand)" }}
-                >
-                  {s.n}
-                </div>
-                <h3 className="mt-3 text-lg font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
-              </div>
-            </Reveal>
+function HowStepFigure({ n }: { n: string }) {
+  return (
+    <div className="how-works-figure relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500 sm:h-14 sm:w-14 sm:text-base">
+      <div
+        className="flex h-full w-full items-center justify-center rounded-xl"
+        style={{ background: "var(--gradient-orb)" }}
+      >
+        {n}
+      </div>
+    </div>
+  );
+}
+
+function HowWorksStepCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <GlassCard as="article" className="group/step h-full p-5 sm:p-6" hover>
+      <h3 className="text-base font-semibold text-white sm:text-lg">{title}</h3>
+      <p className="mt-2 flex-1 text-sm leading-relaxed text-white/70">{desc}</p>
+      <div className="mt-4 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 group-hover/step:scale-x-100" />
+    </GlassCard>
+  );
+}
+
+function HowWorksTimeline({ active }: { active: boolean }) {
+  return (
+    <div className="how-works-timeline group/timeline relative mt-10 sm:mt-16">
+      {/* Desktop: línea entre centros de figura */}
+      <div className="relative hidden lg:block">
+        <div className="pointer-events-none absolute inset-x-0 top-7 z-0 h-0.5" aria-hidden>
+          {[
+            { left: "12.5%", width: "25%" },
+            { left: "37.5%", width: "25%" },
+            { left: "62.5%", width: "25%" },
+          ].map((seg, i) => (
+            <div
+              key={seg.left}
+              className={`how-works-segment how-works-segment-${i + 1} absolute top-0 h-full`}
+              style={{ left: seg.left, width: seg.width }}
+            >
+              <div className="h-full rounded-full bg-white/12" />
+              <div
+                className={`how-works-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/40 via-white to-white/40 ${active ? "is-active" : ""}`}
+                style={{ transitionDelay: active ? `${240 + i * 120}ms` : "0ms" }}
+              />
+            </div>
           ))}
         </div>
+
+        <div className="relative z-10 grid grid-cols-4 gap-5">
+          {HOW_IT_WORKS_STEPS.map((step, i) => (
+            <div
+              key={`lg-${step.n}`}
+              className={`how-step-enter how-works-step group/step flex flex-col items-center ${active ? "is-active" : ""}`}
+              style={{ transitionDelay: `${i * 150}ms` }}
+            >
+              <HowStepFigure n={step.n} />
+              <div className="mt-4 w-full">
+                <HowWorksStepCard title={step.title} desc={step.desc} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tablet / mobile */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:hidden">
+        {HOW_IT_WORKS_STEPS.map((step, i) => (
+          <div
+            key={`sm-${step.n}`}
+            className={`how-step-enter how-works-step group/step flex flex-col ${active ? "is-active" : ""}`}
+            style={{ transitionDelay: `${i * 150}ms` }}
+          >
+            <div className="mb-4 flex justify-center sm:justify-start">
+              <HowStepFigure n={step.n} />
+            </div>
+            <HowWorksStepCard title={step.title} desc={step.desc} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HowItWorks() {
+  const { sectionRef, active } = useSectionActivation("como-funciona");
+
+  return (
+    <section
+      id="como-funciona"
+      ref={sectionRef}
+      className="section-shell relative overflow-hidden"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <Reveal>
+          <SectionHeader
+            badge="Cómo funciona"
+            title="Implementación simple. Impacto inmediato."
+            subtitle="Cuatro pasos para activar adelantos de nómina en tu empresa sin fricción operativa."
+          />
+        </Reveal>
+
+        <HowWorksTimeline active={active} />
       </div>
     </section>
   );
@@ -520,54 +1407,55 @@ function ForCompanies() {
     "Soporte dedicado para tu empresa y empleados",
   ];
   return (
-    <section id="empresas" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-16 lg:grid-cols-2">
+    <section id="empresas" className="section-shell">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid items-center gap-10 sm:gap-16 lg:grid-cols-2">
           <Reveal className="order-2 lg:order-1">
             <div className="relative">
               <div
-                className="absolute -inset-4 -z-10 rounded-3xl opacity-20 blur-2xl"
-                style={{ background: "var(--gradient-brand)" }}
+                className="absolute -inset-3 -z-10 rounded-3xl opacity-30 blur-2xl sm:-inset-4"
+                style={{ background: "var(--gradient-orb)" }}
               />
-              <div
-                className="overflow-hidden rounded-3xl p-10 text-primary-foreground shadow-[var(--shadow-brand)]"
-                style={{ background: "var(--gradient-hero)" }}
-              >
-                <Building2 className="h-10 w-10 opacity-90" />
-                <div className="mt-6 text-5xl font-bold leading-tight">+85%</div>
-                <p className="mt-2 text-lg opacity-90">
-                  de los empleados reportan mayor tranquilidad financiera tras adoptar adelantos de nómina.
-                </p>
-                <div className="mt-8 grid grid-cols-2 gap-4 border-t border-white/20 pt-6">
-                  <div>
-                    <div className="text-3xl font-bold">+40%</div>
-                    <div className="text-sm opacity-80">Retención</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-bold">-30%</div>
-                    <div className="text-sm opacity-80">Ausentismo</div>
+              <GlassCard className="relative overflow-hidden p-6 sm:p-10" hover={false}>
+                <div
+                  className="absolute inset-0 opacity-90"
+                  style={{ background: "var(--gradient-orb)" }}
+                />
+                <div className="relative text-primary-foreground">
+                  <Building2 className="h-8 w-8 text-white sm:h-10 sm:w-10" strokeWidth={2.25} />
+                  <div className="mt-4 text-4xl font-bold leading-tight sm:mt-6 sm:text-5xl">+85%</div>
+                  <p className="mt-2 text-base text-white/90 sm:text-lg">
+                    de los empleados reportan mayor tranquilidad financiera tras adoptar adelantos de nómina.
+                  </p>
+                  <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:mt-8 sm:pt-6">
+                    <div>
+                      <div className="text-2xl font-bold sm:text-3xl">+40%</div>
+                      <div className="text-xs text-white/75 sm:text-sm">Retención</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold sm:text-3xl">-30%</div>
+                      <div className="text-xs text-white/75 sm:text-sm">Ausentismo</div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </GlassCard>
             </div>
           </Reveal>
 
           <Reveal delay={120} className="order-1 lg:order-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-              Para empresas
-            </div>
-            <h2 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+            <SectionBadge>Para empresas</SectionBadge>
+            <h2 className="section-title mt-4 text-left">
               Un beneficio que tu equipo va a amar
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="section-subtitle mt-4 text-left">
               AdeCerebiia se integra con tu sistema de nómina y entrega a tu equipo acceso a su salario ganado.
               Sin costo para la empresa, sin riesgo, sin complicaciones.
             </p>
-            <ul className="mt-8 space-y-3">
+            <ul className="mt-6 space-y-3 sm:mt-8">
               {benefits.map((b) => (
                 <li key={b} className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
-                  <span className="text-foreground">{b}</span>
+                  <CheckIcon light />
+                  <span className="text-sm text-white/90 sm:text-base">{b}</span>
                 </li>
               ))}
             </ul>
@@ -581,41 +1469,42 @@ function ForCompanies() {
 /* ---------- CTA ---------- */
 function CTA() {
   return (
-    <section id="contacto" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-5xl px-6">
+    <section id="contacto" className="section-shell">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <Reveal>
-          <div
-            className="relative overflow-hidden rounded-3xl p-12 text-primary-foreground shadow-[var(--shadow-brand)] sm:p-16"
-            style={{ background: "var(--gradient-hero)" }}
-          >
-            <div className="pointer-events-none absolute inset-0 opacity-30">
-              <svg className="absolute right-8 top-8" width="100" height="100" viewBox="0 0 100 100" fill="none">
+          <GlassCard className="relative overflow-hidden p-6 sm:p-12 lg:p-16" hover={false}>
+            <div
+              className="pointer-events-none absolute inset-0 opacity-80"
+              style={{ background: "var(--gradient-orb)" }}
+            />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(0_0%_100%_/_0.15),transparent_50%)]" />
+            <div className="pointer-events-none absolute inset-0 opacity-20">
+              <svg className="absolute right-4 top-4 sm:right-8 sm:top-8" width="72" height="72" viewBox="0 0 100 100" fill="none">
                 <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="1" />
               </svg>
-              <svg className="absolute -bottom-10 -left-10" width="180" height="180" viewBox="0 0 180 180" fill="none">
+              <svg className="absolute -bottom-10 -left-10 hidden sm:block" width="180" height="180" viewBox="0 0 180 180" fill="none">
                 <rect x="20" y="20" width="140" height="140" rx="20" stroke="white" strokeWidth="1" transform="rotate(20 90 90)" />
               </svg>
             </div>
-            <div className="relative">
-              <h2 className="max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+            <div className="relative text-white">
+              <h2 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
                 Dale a tu equipo el beneficio que estaban esperando
               </h2>
-              <p className="mt-4 max-w-xl text-lg opacity-90">
+              <p className="mt-3 max-w-xl text-base text-white/85 sm:mt-4 sm:text-lg">
                 Agenda una demo de 20 minutos y descubre cómo AdeCerebiia transforma la nómina de tu empresa.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a
+              <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+                <GlassButtonPrimary
                   href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-background px-6 py-3.5 text-base font-semibold text-foreground transition-transform hover:scale-[1.02]"
+                  external
+                  className="w-full justify-center gap-2 bg-white text-[hsl(262_55%_40%)] shadow-[var(--shadow-cta-white)] hover:bg-white/95 sm:w-auto"
                 >
-                  Solicitar demo por WhatsApp
-                  <ArrowRight className="h-4 w-4" />
-                </a>
+                  Contactarnos por WhatsApp
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </GlassButtonPrimary>
               </div>
             </div>
-          </div>
+          </GlassCard>
         </Reveal>
       </div>
     </section>
@@ -625,12 +1514,12 @@ function CTA() {
 /* ---------- Footer ---------- */
 function Footer() {
   return (
-    <footer className="border-t border-border bg-card">
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        <div className="grid gap-10 md:grid-cols-4">
-          <div className="md:col-span-1">
-            <Logo />
-            <p className="mt-4 text-sm text-muted-foreground">
+    <footer className="border-t border-white/10 bg-white/5 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
+        <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4">
+          <div className="col-span-2 md:col-span-1">
+            <Logo inverted />
+            <p className="mt-4 max-w-xs text-sm text-white/75">
               Plataforma de adelantos de nómina. Tu dinero, a tu ritmo.
             </p>
           </div>
@@ -638,7 +1527,7 @@ function Footer() {
           <FooterCol title="Empresa" links={["Sobre nosotros", "Clientes", "Blog", "Contacto"]} />
           <FooterCol title="Legal" links={["Términos", "Privacidad", "Cookies"]} />
         </div>
-        <div className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+        <div className="mt-8 border-t border-white/15 pt-5 text-center text-xs text-white/60 sm:mt-12 sm:pt-6">
           © 2026 AdeCerebiia · Todos los derechos reservados
         </div>
       </div>
@@ -649,11 +1538,11 @@ function Footer() {
 function FooterCol({ title, links }: { title: string; links: string[] }) {
   return (
     <div>
-      <div className="text-sm font-semibold">{title}</div>
+      <div className="text-sm font-semibold text-white">{title}</div>
       <ul className="mt-4 space-y-2">
         {links.map((l) => (
           <li key={l}>
-            <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{l}</a>
+            <a href="#" className="text-sm text-white/65 transition-colors hover:text-white">{l}</a>
           </li>
         ))}
       </ul>

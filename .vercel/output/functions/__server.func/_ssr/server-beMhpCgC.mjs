@@ -1,8 +1,9 @@
 import "../_runtime.mjs";
-import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
+import { r as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { C as isNotFound, S as rootRouteId, T as invariant, b as isRedirect, i as RouterProvider, t as renderRouterToStream, v as resolveManifestAssetLink, x as isResolvedRedirect, y as executeRewriteInput } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as createMemoryHistory } from "../_libs/tanstack__history.mjs";
 import { a as getOrigin, c as createSerializationAdapter, d as au, f as ou, i as getNormalizedURL, l as makeSerovalPlugin, n as mergeHeaders, o as defaultSerovalPlugins, r as attachRouterServerSsrUtils, s as createRawStreamRPCPlugin, t as defineHandlerCallback, u as Iu } from "../_libs/@tanstack/router-core+[...].mjs";
+import { r as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { n as toResponse, t as H3Event } from "../_libs/h3-v2+srvx.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
 require_react();
@@ -83,7 +84,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-DQ4foJWI.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-Dj5AC6g0.mjs");
 	const startManifest = tsrStartManifest();
 	const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes["__root__"] || {};
 	rootRoute.assets = rootRoute.assets || [];
@@ -733,7 +734,7 @@ var baseManifestPromise;
 var cachedFinalManifestPromise;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-CqYehRpB.mjs"),
+		import("./router-DnSTpFHR.mjs"),
 		import("./start-ObTnauo7.mjs"),
 		import("../__23tanstack-start-plugin-adapters-BzCA6dXo.mjs")
 	]);
