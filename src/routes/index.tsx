@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Building2,
   Smartphone,
-  Lock,
   CalendarClock,
   PiggyBank,
   HeartHandshake,
