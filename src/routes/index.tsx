@@ -127,22 +127,35 @@ function BrandIcon({
   );
 }
 
+function BenefitCardIcon({ icon: Icon, light = false }: { icon: LucideIcon; light?: boolean }) {
+  return (
+    <Icon
+      className={`benefit-card-icon ${light ? "benefit-card-icon-light" : "benefit-card-icon-dark"} mb-4 block h-7 w-7 sm:h-8 sm:w-8`}
+      strokeWidth={2.25}
+      aria-hidden
+    />
+  );
+}
+
 /* ---------- Design system (glass) ---------- */
 function GlassCard({
   children,
   className = "",
   hover = true,
+  light = false,
   as: Tag = "div",
 }: {
   children: ReactNode;
   className?: string;
   hover?: boolean;
+  light?: boolean;
   as?: "div" | "article";
 }) {
+  const base = light ? "glass-card-light" : "glass-card";
+  const hoverClass = hover ? (light ? "glass-card-light-hover" : "glass-card-hover") : "";
+
   return (
-    <Tag
-      className={`glass-card ${hover ? "glass-card-hover" : ""} ${className}`}
-    >
+    <Tag className={`${base} ${hoverClass} ${className}`}>
       {children}
     </Tag>
   );
@@ -272,36 +285,59 @@ const LANDING_OUTLINE_STYLES = {
   lg: "landing-deco-outline-lg",
 } as const;
 
+const LIGHT_OUTLINE_STYLES = {
+  sm: "light-deco-outline-sm",
+  md: "light-deco-outline",
+  lg: "light-deco-outline-lg",
+} as const;
+
+type SectionShape = {
+  top: number;
+  left: number;
+  size: number;
+  type: "circle" | "pill" | "diamond" | "square" | "rounded";
+  anim: number;
+  outline: keyof typeof LANDING_OUTLINE_STYLES;
+  rotate?: number;
+};
+
 const LANDING_SHAPES = [
   { top: 4, left: 6, size: 300, type: "circle", anim: 0, outline: "lg" },
-  { top: 7, left: 94, size: 280, type: "rounded", anim: 1, outline: "md", rotate: -12 },
-  { top: 11, left: 42, size: 160, type: "diamond", anim: 2, outline: "sm" },
+  { top: 7, left: 94, size: 280, type: "circle", anim: 1, outline: "md" },
+  { top: 11, left: 42, size: 160, type: "square", anim: 2, outline: "sm", rotate: 45 },
   { top: 15, left: 72, size: 220, type: "circle", anim: 3, outline: "md" },
-  { top: 19, left: 18, size: 200, type: "pill", anim: 4, outline: "lg" },
+  { top: 19, left: 18, size: 200, type: "circle", anim: 4, outline: "lg" },
   { top: 23, left: 58, size: 140, type: "square", anim: 0, outline: "sm", rotate: 8 },
   { top: 27, left: 88, size: 260, type: "circle", anim: 1, outline: "md" },
-  { top: 31, left: 28, size: 180, type: "rounded", anim: 2, outline: "lg", rotate: 14 },
-  { top: 35, left: 50, size: 120, type: "diamond", anim: 3, outline: "md" },
+  { top: 31, left: 28, size: 180, type: "square", anim: 2, outline: "lg", rotate: 14 },
+  { top: 35, left: 50, size: 120, type: "square", anim: 3, outline: "md", rotate: 45 },
   { top: 39, left: 8, size: 320, type: "circle", anim: 4, outline: "lg" },
   { top: 43, left: 82, size: 170, type: "square", anim: 0, outline: "sm", rotate: -10 },
   { top: 47, left: 35, size: 240, type: "circle", anim: 1, outline: "md" },
-  { top: 51, left: 65, size: 150, type: "pill", anim: 2, outline: "lg" },
-  { top: 55, left: 92, size: 200, type: "rounded", anim: 3, outline: "sm", rotate: -18 },
+  { top: 51, left: 65, size: 150, type: "circle", anim: 2, outline: "lg" },
+  { top: 55, left: 92, size: 200, type: "circle", anim: 3, outline: "sm" },
   { top: 59, left: 14, size: 260, type: "circle", anim: 4, outline: "md" },
   { top: 63, left: 48, size: 130, type: "square", anim: 0, outline: "lg", rotate: 22 },
   { top: 67, left: 76, size: 290, type: "circle", anim: 1, outline: "md" },
-  { top: 71, left: 22, size: 160, type: "diamond", anim: 2, outline: "sm" },
-  { top: 75, left: 55, size: 220, type: "rounded", anim: 3, outline: "lg", rotate: 6 },
+  { top: 71, left: 22, size: 160, type: "square", anim: 2, outline: "sm", rotate: 45 },
+  { top: 75, left: 55, size: 220, type: "circle", anim: 3, outline: "lg" },
   { top: 79, left: 86, size: 180, type: "circle", anim: 4, outline: "md" },
-  { top: 83, left: 10, size: 140, type: "pill", anim: 0, outline: "sm" },
+  { top: 83, left: 10, size: 140, type: "circle", anim: 0, outline: "sm" },
   { top: 87, left: 38, size: 250, type: "circle", anim: 1, outline: "lg" },
   { top: 90, left: 68, size: 170, type: "square", anim: 2, outline: "md", rotate: -16 },
-  { top: 93, left: 52, size: 110, type: "diamond", anim: 3, outline: "sm" },
-  { top: 96, left: 24, size: 200, type: "rounded", anim: 4, outline: "lg", rotate: 12 },
+  { top: 93, left: 52, size: 110, type: "square", anim: 3, outline: "sm", rotate: 45 },
+  { top: 96, left: 24, size: 200, type: "circle", anim: 4, outline: "lg" },
   { top: 97, left: 90, size: 280, type: "circle", anim: 0, outline: "md" },
-] as const;
+] as const satisfies readonly SectionShape[];
 
-function landingShapeRadius(type: (typeof LANDING_SHAPES)[number]["type"]) {
+const LIGHT_SECTION_SHAPES = [
+  { top: 10, left: 8, size: 320, type: "circle", anim: 0, outline: "lg" },
+  { top: 10, left: 92, size: 280, type: "square", anim: 1, outline: "lg", rotate: 12 },
+  { top: 90, left: 8, size: 260, type: "square", anim: 2, outline: "md", rotate: 45 },
+  { top: 90, left: 92, size: 300, type: "circle", anim: 3, outline: "lg" },
+] as const satisfies readonly SectionShape[];
+
+function landingShapeRadius(type: SectionShape["type"]) {
   switch (type) {
     case "circle":
     case "pill":
@@ -315,21 +351,40 @@ function landingShapeRadius(type: (typeof LANDING_SHAPES)[number]["type"]) {
   }
 }
 
-function LandingDecorations() {
+function ShapeDecorations({
+  shapes,
+  outlineStyles,
+  large = false,
+  subtle = false,
+  cornerOnly = false,
+}: {
+  shapes: readonly SectionShape[];
+  outlineStyles: Record<keyof typeof LANDING_OUTLINE_STYLES, string>;
+  large?: boolean;
+  subtle?: boolean;
+  cornerOnly?: boolean;
+}) {
+  const minSize = large ? "10rem" : "8rem";
+  const vwSize = large ? "30vw" : "22vw";
+  const borderClass = subtle ? "border" : "border-2";
+
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {LANDING_SHAPES.map((shape, i) => {
+      {shapes.map((shape, i) => {
         const isPill = shape.type === "pill";
         const isDiamond = shape.type === "diamond";
-        const extraRotate = "rotate" in shape && shape.rotate ? shape.rotate : 0;
-        const size = `clamp(8rem, 22vw, ${shape.size}px)`;
-        const pillWidth = `clamp(10rem, 28vw, ${Math.round(shape.size * 1.65)}px)`;
-        const pillHeight = `clamp(3.5rem, 8vw, ${Math.round(shape.size * 0.42)}px)`;
+        const extraRotate = shape.rotate ?? 0;
+        const size = `clamp(${minSize}, ${vwSize}, ${shape.size}px)`;
+        const pillWidth = `clamp(12rem, 34vw, ${Math.round(shape.size * 1.65)}px)`;
+        const pillHeight = `clamp(4rem, 10vw, ${Math.round(shape.size * 0.42)}px)`;
+        const driftClass = cornerOnly
+          ? `corner-shape-drift-${shape.anim}`
+          : `landing-shape-drift-${shape.anim}`;
 
         return (
           <div
-            key={i}
-            className={`absolute landing-shape-drift-${shape.anim}`}
+            key={`${shape.top}-${shape.left}-${i}`}
+            className={`absolute ${driftClass}`}
             style={{
               top: `${shape.top}%`,
               left: `${shape.left}%`,
@@ -337,7 +392,7 @@ function LandingDecorations() {
             }}
           >
             <div
-              className={`border-2 ${landingShapeRadius(shape.type)} ${LANDING_OUTLINE_STYLES[shape.outline]}`}
+              className={`${borderClass} ${landingShapeRadius(shape.type)} ${outlineStyles[shape.outline]}`}
               style={{
                 width: isPill ? pillWidth : size,
                 height: isPill ? pillHeight : size,
@@ -348,6 +403,22 @@ function LandingDecorations() {
         );
       })}
     </div>
+  );
+}
+
+function LandingDecorations() {
+  return <ShapeDecorations shapes={LANDING_SHAPES} outlineStyles={LANDING_OUTLINE_STYLES} />;
+}
+
+function LightSectionDecorations() {
+  return (
+    <ShapeDecorations
+      shapes={LIGHT_SECTION_SHAPES}
+      outlineStyles={LIGHT_OUTLINE_STYLES}
+      large
+      subtle
+      cornerOnly
+    />
   );
 }
 
@@ -609,7 +680,7 @@ function NavCta({
       target="_blank"
       rel="noopener noreferrer"
       onClick={onNavigate}
-      className={`nav-btn-cta nav-btn-lift ${visibility} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`}
+      className={`nav-btn-cta nav-btn-lift ${visibility} items-center justify-center gap-1.5 rounded-full px-4 py-2 text-xs sm:gap-2 sm:text-sm sm:px-5 sm:py-2.5 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`}
     >
       Contáctanos
       <ArrowRight className="nav-arrow-slide h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
@@ -789,9 +860,9 @@ function HeroHighlight({
         strokeWidth={2.25}
         aria-hidden
       />
-      <div className="min-w-0 pt-0.5">
+      <div className="min-w-0 pt-0.5 text-left">
         <div className="text-sm font-semibold text-white sm:text-base">{title}</div>
-        <div className="mt-0.5 text-xs leading-relaxed text-white/70 sm:text-sm">{desc}</div>
+        <div className="mt-0.5 text-left text-xs leading-relaxed text-white/70 sm:text-sm">{desc}</div>
       </div>
     </GlassCard>
   );
@@ -815,7 +886,7 @@ function Hero() {
                 <br />
                 <span className="text-gradient-soft">control para tu empresa.</span>
               </h1>
-              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 sm:text-base">
+              <p className="mt-4 max-w-lg text-left text-sm leading-relaxed text-white/80 sm:text-base">
                 Automatiza, gestiona y registra las solicitudes de adelanto de nómina de tus
                 colaboradores. Una plataforma diseñada para integrarse a tu flujo operativo actual
                 de forma fluida, elegante y segura.
@@ -977,9 +1048,9 @@ function FloatingChip({
       style={style}
     >
       <BrandIcon icon={icon} size="sm" variant="gradient" />
-      <div className="min-w-0 pr-1">
+      <div className="min-w-0 pr-1 text-left">
         <div className="text-xs font-semibold leading-tight text-foreground sm:text-sm">{title}</div>
-        <div className="text-[10px] text-foreground/60 sm:text-[11px]">{sub}</div>
+        <div className="text-left text-[10px] text-foreground/60 sm:text-[11px]">{sub}</div>
       </div>
     </div>
   );
@@ -987,9 +1058,30 @@ function FloatingChip({
 
 /* ---------- Impact Metrics ---------- */
 const IMPACT_METRICS = [
-  { target: 70, prefix: "", suffix: "%", label: "Estrés Financiero" },
-  { target: -16, prefix: "", suffix: "%", label: "Rotación de Personal" },
-  { target: 0, prefix: "$", suffix: "", label: "Costo Organizacional" },
+  {
+    target: 70,
+    prefix: "",
+    suffix: "%",
+    label: "Estrés Financiero",
+    description:
+      "De los trabajadores sufre de ansiedad por su flujo de caja. Reduce esta carga ofreciendo liquidez sobre el salario ya devengado.",
+  },
+  {
+    target: -16,
+    prefix: "",
+    suffix: "%",
+    label: "Rotación de Personal",
+    description:
+      "Disminución promedio en la deserción laboral al implementar programas modernos de bienestar financiero e incentivos internos.",
+  },
+  {
+    target: 0,
+    prefix: "$",
+    suffix: "",
+    label: "Costo Organizacional",
+    description:
+      "Cero costos de afiliación, mantenimiento o integración. Un beneficio de alto impacto operativo totalmente gratuito para la empresa.",
+  },
 ] as const;
 
 type ImpactMetric = (typeof IMPACT_METRICS)[number];
@@ -1094,12 +1186,15 @@ function ImpactMetrics() {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
           {IMPACT_METRICS.map((metric, i) => (
             <Reveal key={metric.label} delay={i * 100}>
-              <GlassCard className="p-8 text-center sm:p-10" hover>
-                <div className="text-4xl font-extrabold sm:text-5xl">
+              <GlassCard className="p-8 sm:p-10" hover>
+                <div className="text-center text-4xl font-extrabold sm:text-5xl">
                   <CountUpMetric metric={metric} />
                 </div>
-                <p className="mt-3 text-sm font-medium tracking-wide text-white/70">
+                <p className="mt-3 text-center text-sm font-medium tracking-wide text-white/70">
                   {metric.label}
+                </p>
+                <p className="mt-2 text-left text-sm leading-relaxed text-white/60">
+                  {metric.description}
                 </p>
               </GlassCard>
             </Reveal>
@@ -1143,12 +1238,10 @@ function CorporateBenefits() {
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
           {CORPORATE_BENEFITS.map(({ icon: Icon, title, desc }, i) => (
             <Reveal key={title} delay={i * 100}>
-              <GlassCard as="article" className="h-full p-6 sm:p-7" hover>
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl shadow-[var(--shadow-orb)]" style={{ background: "var(--gradient-orb)" }}>
-                  <Icon className="h-6 w-6 text-white" strokeWidth={2.25} aria-hidden />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-white sm:text-xl">{title}</h3>
-                <p className="text-sm leading-relaxed text-white/70">{desc}</p>
+              <GlassCard as="article" className="h-full p-6 text-left sm:p-7" hover>
+                <BenefitCardIcon icon={Icon} />
+                <h3 className="mb-2 text-left text-lg font-semibold text-white sm:text-xl">{title}</h3>
+                <p className="text-left text-sm leading-relaxed text-white/70">{desc}</p>
               </GlassCard>
             </Reveal>
           ))}
@@ -1169,8 +1262,9 @@ function Features() {
     { icon: Smartphone, title: "100% digital", desc: "Sin papeleos ni trámites. Tus empleados solicitan desde su móvil en cualquier momento." },
   ];
   return (
-    <section id="producto" className="section-shell">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+    <section id="producto" className="section-shell section-surface-light relative overflow-hidden">
+      <LightSectionDecorations />
+      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
           <SectionHeader
             badge="Beneficios"
@@ -1182,15 +1276,10 @@ function Features() {
         <div className="mt-10 grid gap-5 sm:mt-14 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {items.map(({ icon: Icon, title, desc }, i) => (
             <Reveal key={title} delay={i * 80}>
-              <GlassCard as="article" className="group h-full p-5 sm:p-7" hover>
-                <BrandIcon
-                  icon={Icon}
-                  size="lg"
-                  variant="orb"
-                  className="group-hover:scale-105 group-hover:shadow-[0_0_32px_hsl(265_55%_55%_/_0.4)]"
-                />
-                <h3 className="mt-5 text-lg font-semibold text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/70">{desc}</p>
+              <GlassCard as="article" light className="feature-benefit-card h-full p-5 text-left sm:p-7" hover>
+                <BenefitCardIcon icon={Icon} light />
+                <h3 className="mt-1 text-left text-lg font-semibold text-foreground">{title}</h3>
+                <p className="mt-2 text-left text-sm leading-relaxed text-foreground/70">{desc}</p>
               </GlassCard>
             </Reveal>
           ))}
@@ -1202,19 +1291,20 @@ function Features() {
 
 /* ---------- Installments (cuotas) ---------- */
 const CUOTAS_STEPS = [
-  { n: "1", label: "Cuota única", desc: "Se descuenta en la siguiente nómina." },
-  { n: "2", label: "2 cuotas", desc: "Distribuido en las próximas dos nóminas." },
-  { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el empleado." },
+  { n: "1", label: "Cuota única", desc: "Descuento total en la próxima liquidación de nómina." },
+  { n: "2", label: "2 cuotas", desc: "El monto se reparte entre los dos periodos siguientes." },
+  { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el flujo de caja del colaborador." },
 ] as const;
 
 function CuotasTimelineFigure({ n }: { n: string }) {
   return (
-    <div className="cuotas-timeline-figure relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500">
+    <div className="cuotas-timeline-figure relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500">
       <div
-        className="flex h-full w-full items-center justify-center rounded-xl"
+        className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full"
         style={{ background: "var(--gradient-orb)" }}
       >
-        {n}
+        <span className="cuotas-figure-shine" aria-hidden />
+        <span className="relative z-[1]">{n}</span>
       </div>
     </div>
   );
@@ -1224,11 +1314,11 @@ function CuotasTimelineCard({ label, desc }: { label: string; desc: string }) {
   return (
     <GlassCard
       as="article"
-      className="w-full p-5 text-center sm:p-6"
+      className="w-full p-5 text-left sm:p-6"
       hover
     >
-      <div className="text-lg font-semibold text-white">{label}</div>
-      <div className="mt-1 text-sm text-white/70">{desc}</div>
+      <div className="text-center text-lg font-semibold text-white sm:text-left">{label}</div>
+      <div className="mt-1 text-left text-sm leading-relaxed text-white/70">{desc}</div>
     </GlassCard>
   );
 }
@@ -1299,23 +1389,24 @@ function Installments() {
           <Reveal>
             <SectionBadge>Pagos a cuotas</SectionBadge>
             <h2 className="section-title mt-4 text-left">
-              Flexibilidad real para tus empleados
+              Flexibilidad de pago para tu equipo
             </h2>
             <p className="section-subtitle mt-4 text-left">
-              Cada adelanto puede pagarse hasta en 3 cuotas, ajustándose al momento financiero del empleado.
-              La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.
+              Tus colaboradores pueden repartir cada adelanto en hasta 3 cuotas, según su momento
+              financiero. Sin costo para la empresa: solo aplica una tarifa fija de $8.000 por
+              solicitud.
             </p>
             <ul className="mt-6 space-y-3 sm:mt-8">
               {[
-                "Descuento por nómina, sin gestión manual para tu empresa",
-                "El empleado elige entre 1, 2 o 3 cuotas según su flujo",
-                "Tarifa fija de $8.000 por adelanto: si solicita $500.000, recibe $492.000",
-                "Total transparencia: ve sus cuotas y saldos en tiempo real",
-                "Sin intereses ocultos ni letra pequeña",
+                "Descuento automático por nómina, sin gestión manual para RR.HH.",
+                "El colaborador elige entre 1, 2 o 3 cuotas al solicitar el adelanto.",
+                "Tarifa transparente de $8.000: un adelanto de $500.000 se desembolsa en $492.000.",
+                "Visibilidad total: cuotas, saldos y fechas de descuento en tiempo real.",
+                "Sin intereses ocultos ni condiciones en letra pequeña.",
               ].map((b) => (
                 <li key={b} className="flex items-start gap-3">
                   <CheckIcon light />
-                  <span className="text-sm text-white/90 sm:text-base">{b}</span>
+                  <span className="text-left text-sm text-white/90 sm:text-base">{b}</span>
                 </li>
               ))}
             </ul>
@@ -1338,30 +1429,33 @@ const HOW_IT_WORKS_STEPS = [
   { n: "04", title: "Pagamos y descontamos", desc: "Nuestro equipo procesa y desembolsa el adelanto. Las cuotas se descuentan de la nómina sin trabajo extra para ti." },
 ] as const;
 
-function HowStepFigure({ n }: { n: string }) {
+function HowStepFigure({ n, light = false }: { n: string; light?: boolean }) {
   return (
-    <div className="how-works-figure relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500 sm:h-14 sm:w-14 sm:text-base">
+    <div className="how-works-figure relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-primary-foreground shadow-[var(--shadow-brand)] ring-4 ring-transparent transition-shadow duration-500 sm:h-14 sm:w-14 sm:text-base">
       <div
-        className="flex h-full w-full items-center justify-center rounded-xl"
-        style={{ background: "var(--gradient-orb)" }}
+        className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full"
+        style={{ background: light ? "var(--gradient-brand)" : "var(--gradient-orb)" }}
       >
-        {n}
+        <span className="how-figure-shine" aria-hidden />
+        <span className="relative z-[1]">{n}</span>
       </div>
     </div>
   );
 }
 
-function HowWorksStepCard({ title, desc }: { title: string; desc: string }) {
+function HowWorksStepCard({ title, desc, light = false }: { title: string; desc: string; light?: boolean }) {
   return (
-    <GlassCard as="article" className="group/step h-full p-5 sm:p-6" hover>
-      <h3 className="text-base font-semibold text-white sm:text-lg">{title}</h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-white/70">{desc}</p>
-      <div className="mt-4 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 group-hover/step:scale-x-100" />
+    <GlassCard as="article" light={light} className="group/step h-full p-5 text-left sm:p-6" hover>
+      <h3 className={`text-left text-base font-semibold sm:text-lg ${light ? "text-foreground" : "text-white"}`}>{title}</h3>
+      <p className={`mt-2 flex-1 text-left text-sm leading-relaxed ${light ? "text-foreground/70" : "text-white/70"}`}>{desc}</p>
+      <div
+        className={`mt-4 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover/step:scale-x-100 ${light ? "via-primary/30" : "via-white/35"}`}
+      />
     </GlassCard>
   );
 }
 
-function HowWorksTimeline({ active }: { active: boolean }) {
+function HowWorksTimeline({ active, light = false }: { active: boolean; light?: boolean }) {
   return (
     <div className="how-works-timeline group/timeline relative mt-10 sm:mt-16">
       {/* Desktop: línea entre centros de figura */}
@@ -1377,9 +1471,9 @@ function HowWorksTimeline({ active }: { active: boolean }) {
               className={`how-works-segment how-works-segment-${i + 1} absolute top-0 h-full`}
               style={{ left: seg.left, width: seg.width }}
             >
-              <div className="h-full rounded-full bg-white/12" />
+              <div className={`h-full rounded-full ${light ? "bg-primary/15" : "bg-white/12"}`} />
               <div
-                className={`how-works-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/40 via-white to-white/40 ${active ? "is-active" : ""}`}
+                className={`how-works-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full ${light ? "bg-gradient-to-r from-primary/35 via-primary to-primary/35" : "bg-gradient-to-r from-white/40 via-white to-white/40"} ${active ? "is-active" : ""}`}
                 style={{ transitionDelay: active ? `${240 + i * 120}ms` : "0ms" }}
               />
             </div>
@@ -1390,12 +1484,14 @@ function HowWorksTimeline({ active }: { active: boolean }) {
           {HOW_IT_WORKS_STEPS.map((step, i) => (
             <div
               key={`lg-${step.n}`}
-              className={`how-step-enter how-works-step group/step flex flex-col items-center ${active ? "is-active" : ""}`}
-              style={{ transitionDelay: `${i * 150}ms` }}
+              className="how-works-step group/step flex flex-col items-center"
             >
-              <HowStepFigure n={step.n} />
-              <div className="mt-4 w-full">
-                <HowWorksStepCard title={step.title} desc={step.desc} />
+              <HowStepFigure n={step.n} light={light} />
+              <div
+                className={`how-step-card-fall mt-4 w-full ${active ? "is-active" : ""}`}
+                style={{ transitionDelay: active ? `${220 + i * 160}ms` : "0ms" }}
+              >
+                <HowWorksStepCard title={step.title} desc={step.desc} light={light} />
               </div>
             </div>
           ))}
@@ -1407,13 +1503,17 @@ function HowWorksTimeline({ active }: { active: boolean }) {
         {HOW_IT_WORKS_STEPS.map((step, i) => (
           <div
             key={`sm-${step.n}`}
-            className={`how-step-enter how-works-step group/step flex flex-col ${active ? "is-active" : ""}`}
-            style={{ transitionDelay: `${i * 150}ms` }}
+            className="how-works-step group/step flex flex-col"
           >
             <div className="mb-4 flex justify-center sm:justify-start">
-              <HowStepFigure n={step.n} />
+              <HowStepFigure n={step.n} light={light} />
             </div>
-            <HowWorksStepCard title={step.title} desc={step.desc} />
+            <div
+              className={`how-step-card-fall ${active ? "is-active" : ""}`}
+              style={{ transitionDelay: active ? `${180 + i * 140}ms` : "0ms" }}
+            >
+              <HowWorksStepCard title={step.title} desc={step.desc} light={light} />
+            </div>
           </div>
         ))}
       </div>
@@ -1428,9 +1528,10 @@ function HowItWorks() {
     <section
       id="como-funciona"
       ref={sectionRef}
-      className="section-shell relative overflow-hidden"
+      className="section-shell section-surface-light relative overflow-hidden"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <LightSectionDecorations />
+      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
         <Reveal>
           <SectionHeader
             badge="Cómo funciona"
@@ -1439,7 +1540,7 @@ function HowItWorks() {
           />
         </Reveal>
 
-        <HowWorksTimeline active={active} />
+        <HowWorksTimeline active={active} light />
       </div>
     </section>
   );
@@ -1466,15 +1567,15 @@ function ForCompanies() {
                 className="absolute -inset-3 -z-10 rounded-3xl opacity-30 blur-2xl sm:-inset-4"
                 style={{ background: "var(--gradient-orb)" }}
               />
-              <GlassCard className="relative overflow-hidden p-6 sm:p-10" hover={false}>
+              <GlassCard className="relative overflow-hidden p-6 text-left sm:p-10" hover={false}>
                 <div
                   className="absolute inset-0 opacity-90"
                   style={{ background: "var(--gradient-orb)" }}
                 />
-                <div className="relative text-primary-foreground">
+                <div className="relative text-left text-primary-foreground">
                   <Building2 className="h-8 w-8 text-white sm:h-10 sm:w-10" strokeWidth={2.25} />
                   <div className="mt-4 text-4xl font-bold leading-tight sm:mt-6 sm:text-5xl">+85%</div>
-                  <p className="mt-2 text-base text-white/90 sm:text-lg">
+                  <p className="mt-2 text-left text-base leading-relaxed text-white/90 sm:text-lg">
                     de los empleados reportan mayor tranquilidad financiera tras adoptar adelantos de nómina.
                   </p>
                   <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:mt-8 sm:pt-6">
@@ -1505,7 +1606,7 @@ function ForCompanies() {
               {benefits.map((b) => (
                 <li key={b} className="flex items-start gap-3">
                   <CheckIcon light />
-                  <span className="text-sm text-white/90 sm:text-base">{b}</span>
+                  <span className="text-left text-sm text-white/90 sm:text-base">{b}</span>
                 </li>
               ))}
             </ul>
@@ -1536,11 +1637,11 @@ function CTA() {
                 <rect x="20" y="20" width="140" height="140" rx="20" stroke="white" strokeWidth="1" transform="rotate(20 90 90)" />
               </svg>
             </div>
-            <div className="relative text-white">
+            <div className="relative text-left text-white">
               <h2 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
                 Dale a tu equipo el beneficio que estaban esperando
               </h2>
-              <p className="mt-3 max-w-xl text-base text-white/85 sm:mt-4 sm:text-lg">
+              <p className="mt-3 max-w-xl text-left text-base leading-relaxed text-white/85 sm:mt-4 sm:text-lg">
                 Agenda una demo de 20 minutos y descubre cómo AdeCerebiia transforma la nómina de tu empresa.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
@@ -1569,7 +1670,7 @@ function Footer() {
         <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <Logo inverted />
-            <p className="mt-4 max-w-xs text-sm text-white/75">
+            <p className="mt-4 max-w-xs text-left text-sm leading-relaxed text-white/75">
               Plataforma de adelantos de nómina. Tu dinero, a tu ritmo.
             </p>
           </div>

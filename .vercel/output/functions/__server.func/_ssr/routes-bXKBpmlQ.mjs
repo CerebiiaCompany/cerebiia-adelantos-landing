@@ -5,7 +5,7 @@ import { a as Portal, c as Trigger, i as Overlay, n as Content, o as Root, r as 
 import { a as Smartphone, c as Medal, d as CircleCheck, f as CalendarDays, g as ArrowRight, h as Banknote, i as TrendingUp, l as House, m as Bolt, n as Workflow, o as ShieldCheck, p as Building2, r as Users, s as Menu, t as X, u as HeartHandshake } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-sMHeRico.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-bXKBpmlQ.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -159,9 +159,9 @@ function BrandIcon({ icon: Icon, size = "md", variant = "gradient", className = 
 		})
 	});
 }
-function GlassCard({ children, className = "", hover = true, as: Tag = "div" }) {
+function GlassCard({ children, className = "", hover = true, light = false, as: Tag = "div" }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tag, {
-		className: `glass-card ${hover ? "glass-card-hover" : ""} ${className}`,
+		className: `${light ? "glass-card-light" : "glass-card"} ${hover ? light ? "glass-card-light-hover" : "glass-card-hover" : ""} ${className}`,
 		children
 	});
 }
@@ -231,6 +231,11 @@ var LANDING_OUTLINE_STYLES = {
 	sm: "landing-deco-outline-sm",
 	md: "landing-deco-outline",
 	lg: "landing-deco-outline-lg"
+};
+var LIGHT_OUTLINE_STYLES = {
+	sm: "light-deco-outline-sm",
+	md: "light-deco-outline",
+	lg: "light-deco-outline-lg"
 };
 var LANDING_SHAPES = [
 	{
@@ -451,6 +456,117 @@ var LANDING_SHAPES = [
 		outline: "md"
 	}
 ];
+var LIGHT_SECTION_SHAPES = [
+	{
+		top: 5,
+		left: 3,
+		size: 380,
+		type: "circle",
+		anim: 0,
+		outline: "lg"
+	},
+	{
+		top: 10,
+		left: 94,
+		size: 340,
+		type: "rounded",
+		anim: 1,
+		outline: "lg",
+		rotate: -14
+	},
+	{
+		top: 18,
+		left: 46,
+		size: 220,
+		type: "diamond",
+		anim: 2,
+		outline: "md"
+	},
+	{
+		top: 26,
+		left: 80,
+		size: 300,
+		type: "circle",
+		anim: 3,
+		outline: "lg"
+	},
+	{
+		top: 34,
+		left: 10,
+		size: 280,
+		type: "pill",
+		anim: 4,
+		outline: "lg"
+	},
+	{
+		top: 42,
+		left: 62,
+		size: 200,
+		type: "square",
+		anim: 0,
+		outline: "md",
+		rotate: 12
+	},
+	{
+		top: 50,
+		left: 24,
+		size: 320,
+		type: "circle",
+		anim: 1,
+		outline: "lg"
+	},
+	{
+		top: 58,
+		left: 90,
+		size: 260,
+		type: "rounded",
+		anim: 2,
+		outline: "lg",
+		rotate: 18
+	},
+	{
+		top: 66,
+		left: 6,
+		size: 360,
+		type: "circle",
+		anim: 3,
+		outline: "lg"
+	},
+	{
+		top: 74,
+		left: 50,
+		size: 180,
+		type: "diamond",
+		anim: 4,
+		outline: "md"
+	},
+	{
+		top: 82,
+		left: 84,
+		size: 240,
+		type: "square",
+		anim: 0,
+		outline: "md",
+		rotate: -10
+	},
+	{
+		top: 90,
+		left: 32,
+		size: 300,
+		type: "rounded",
+		anim: 1,
+		outline: "lg",
+		rotate: 8
+	},
+	{
+		top: 96,
+		left: 68,
+		size: 260,
+		type: "circle",
+		anim: 2,
+		outline: "lg"
+	}
+];
 function landingShapeRadius(type) {
 	switch (type) {
 		case "circle":
@@ -460,17 +576,19 @@ function landingShapeRadius(type) {
 		case "diamond": return "rounded-2xl";
 	}
 }
-function LandingDecorations() {
+function ShapeDecorations({ shapes, outlineStyles, large = false }) {
+	const minSize = large ? "10rem" : "8rem";
+	const vwSize = large ? "30vw" : "22vw";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "pointer-events-none absolute inset-0 overflow-hidden",
 		"aria-hidden": true,
-		children: LANDING_SHAPES.map((shape, i) => {
+		children: shapes.map((shape, i) => {
 			const isPill = shape.type === "pill";
 			const isDiamond = shape.type === "diamond";
-			const extraRotate = "rotate" in shape && shape.rotate ? shape.rotate : 0;
-			const size = `clamp(8rem, 22vw, ${shape.size}px)`;
-			const pillWidth = `clamp(10rem, 28vw, ${Math.round(shape.size * 1.65)}px)`;
-			const pillHeight = `clamp(3.5rem, 8vw, ${Math.round(shape.size * .42)}px)`;
+			const extraRotate = shape.rotate ?? 0;
+			const size = `clamp(${minSize}, ${vwSize}, ${shape.size}px)`;
+			const pillWidth = `clamp(12rem, 34vw, ${Math.round(shape.size * 1.65)}px)`;
+			const pillHeight = `clamp(4rem, 10vw, ${Math.round(shape.size * .42)}px)`;
 			return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: `absolute landing-shape-drift-${shape.anim}`,
 				style: {
@@ -479,15 +597,28 @@ function LandingDecorations() {
 					animationDelay: `${i * 1.4}s`
 				},
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: `border-2 ${landingShapeRadius(shape.type)} ${LANDING_OUTLINE_STYLES[shape.outline]}`,
+					className: `border-2 ${landingShapeRadius(shape.type)} ${outlineStyles[shape.outline]}`,
 					style: {
 						width: isPill ? pillWidth : size,
 						height: isPill ? pillHeight : size,
 						transform: `translate(-50%, -50%)${isDiamond ? " rotate(45deg)" : extraRotate ? ` rotate(${extraRotate}deg)` : ""}`
 					}
 				})
-			}, i);
+			}, `${shape.top}-${shape.left}-${i}`);
 		})
+	});
+}
+function LandingDecorations() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShapeDecorations, {
+		shapes: LANDING_SHAPES,
+		outlineStyles: LANDING_OUTLINE_STYLES
+	});
+}
+function LightSectionDecorations() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShapeDecorations, {
+		shapes: LIGHT_SECTION_SHAPES,
+		outlineStyles: LIGHT_OUTLINE_STYLES,
+		large: true
 	});
 }
 function Index() {
@@ -583,8 +714,8 @@ function Logo({ inverted = false }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "flex min-w-0 items-center gap-2 sm:gap-2.5",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: `flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold sm:h-10 sm:w-10 sm:text-lg ${inverted ? "text-primary-foreground shadow-[var(--shadow-orb)]" : "text-primary-foreground shadow-[var(--shadow-brand)]"}`,
-			style: { background: inverted ? "var(--gradient-orb)" : "var(--gradient-brand)" },
+			className: "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold text-primary-foreground shadow-[var(--shadow-brand)] sm:h-10 sm:w-10 sm:text-lg",
+			style: { background: "var(--gradient-brand)" },
 			children: "A"
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 			className: `truncate text-base font-semibold tracking-tight sm:text-lg ${inverted ? "text-white" : "text-foreground"}`,
@@ -599,11 +730,11 @@ function NavInlineLink({ href, label, icon: Icon, onClick, index = 0 }) {
 		title: label,
 		onClick,
 		style: { animationDelay: `${index * 55}ms` },
-		className: "nav-inline-link nav-item-enter group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white/70 transition-all duration-300 hover:text-white xl:px-3.5",
+		className: "nav-inline-link nav-item-enter group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white transition-all duration-300 xl:px-3.5",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 			className: `nav-card-icon inline-flex ${iconAnim}`,
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-				className: "nav-inline-icon h-4 w-4 text-white/55 transition-all duration-300 group-hover:text-white",
+				className: "nav-inline-icon h-4 w-4 text-white transition-all duration-300",
 				strokeWidth: 2.25,
 				"aria-hidden": true
 			})
@@ -641,7 +772,7 @@ function NavAuthButtons({ className = "", stacked = false, onNavigate }) {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 			href: LOGIN_URL,
 			onClick: onNavigate,
-			className: `nav-btn-ingresar ${visibility} nav-btn-lift mobile-sheet-footer-item mobile-sheet-register items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "w-full" : ""}`,
+			className: `nav-link-ingresar ${visibility} mobile-sheet-footer-item mobile-sheet-login items-center text-xs font-medium sm:text-sm ${stacked ? "w-full justify-center py-2.5" : "px-1"}`,
 			children: "Ingresar"
 		})
 	});
@@ -652,7 +783,7 @@ function NavCta({ className = "", stacked = false, onNavigate }) {
 		target: "_blank",
 		rel: "noopener noreferrer",
 		onClick: onNavigate,
-		className: `nav-btn-ingresar nav-btn-lift ${stacked ? "inline-flex" : "hidden lg:inline-flex"} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`,
+		className: `nav-btn-cta nav-btn-lift ${stacked ? "inline-flex" : "hidden lg:inline-flex"} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`,
 		children: ["Contáctanos", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "nav-arrow-slide h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" })]
 	});
 }
@@ -792,14 +923,14 @@ var HERO_HIGHLIGHTS = [
 		desc: "Exporta reportes consolidados listos para aplicar a tu software de nómina tradicional al finalizar el periodo permitido."
 	}
 ];
-function HeroHighlight({ icon, title, desc }) {
+function HeroHighlight({ icon: Icon, title, desc }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(GlassCard, {
 		className: "flex items-start gap-3.5 p-4 sm:gap-4 sm:p-5",
 		hover: true,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrandIcon, {
-			icon,
-			size: "md",
-			variant: "orb"
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+			className: "mt-0.5 h-5 w-5 shrink-0 text-white sm:h-6 sm:w-6",
+			strokeWidth: 2.25,
+			"aria-hidden": true
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "min-w-0 pt-0.5",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -874,9 +1005,9 @@ function Hero() {
 				}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Reveal, {
 					delay: 150,
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "relative flex min-h-[320px] items-center justify-center sm:min-h-[420px] lg:min-h-full",
+						className: "relative flex min-h-[320px] items-center justify-center overflow-visible sm:min-h-[420px] lg:min-h-full lg:justify-end",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "relative w-full max-w-sm",
+							className: "relative w-full max-w-sm overflow-visible lg:translate-x-6 xl:translate-x-10",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustOrb, {})
 						})
 					})
@@ -887,28 +1018,20 @@ function Hero() {
 }
 function TrustOrb() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]",
+		className: "relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] overflow-visible sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]",
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute -inset-6 -z-10 rounded-[3rem] bg-white/40 opacity-70 blur-3xl sm:-inset-10" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute -inset-6 -z-10 rounded-[3rem] bg-white/50 opacity-70 blur-3xl sm:-inset-10" }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute inset-0 -z-10 opacity-[0.35]",
-				style: {
-					backgroundImage: "radial-gradient(oklch(0.52 0.24 268 / 0.18) 1px, transparent 1px)",
-					backgroundSize: "22px 22px"
-				}
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-white/60 bg-white/70 shadow-lg backdrop-blur-md sm:top-6",
+				className: "absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border-2 landing-deco-outline-lg sm:top-6",
 				style: { transform: "translate(-46%, 0) rotate(-5deg)" }
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl border border-foreground/8 bg-white p-5 text-foreground shadow-[0_20px_50px_rgba(15,23,42,0.12)] animate-float-slow sm:rounded-3xl sm:p-8",
+				className: "relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl border border-foreground/8 bg-white p-5 text-foreground shadow-[0_20px_50px_rgba(15,23,42,0.1)] animate-float-slow sm:rounded-3xl sm:p-8",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-primary/12" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-primary/8" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full border border-primary/8" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border-2 border-primary/20 bg-transparent sm:h-96 sm:w-96" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full border-2 border-accent/25 bg-transparent sm:h-96 sm:w-96" }),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex items-center justify-between",
+						className: "relative z-[1] flex items-center justify-between",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex items-center gap-2.5",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -928,7 +1051,7 @@ function TrustOrb() {
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "relative mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40",
+						className: "relative z-[1] mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring" }),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
@@ -936,7 +1059,7 @@ function TrustOrb() {
 								style: { animationDelay: "1.2s" }
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.14)] ring-4 ring-primary/15 sm:h-28 sm:w-28",
+								className: "relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)] ring-4 ring-primary/12 sm:h-28 sm:w-28",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
 									className: "h-9 w-9 text-accent sm:h-11 sm:w-11",
 									strokeWidth: 2.25
@@ -951,7 +1074,7 @@ function TrustOrb() {
 						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mt-6 text-center sm:mt-10",
+						className: "relative z-[1] mt-6 text-center sm:mt-10",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/50 sm:text-[11px]",
 							children: "Confianza · Bienestar"
@@ -965,7 +1088,7 @@ function TrustOrb() {
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mt-6 grid grid-cols-3 gap-1.5 border-t border-foreground/8 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5",
+						className: "relative z-[1] mt-6 grid grid-cols-3 gap-1.5 border-t border-foreground/8 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustStat, {
 								label: "Cuotas",
@@ -984,7 +1107,7 @@ function TrustOrb() {
 				]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute -left-4 top-24 hidden animate-float sm:block",
+				className: "absolute -left-12 top-16 hidden animate-float sm:block lg:-left-16 lg:top-20",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FloatingChip, {
 					icon: HeartHandshake,
 					title: "Sin riesgo",
@@ -992,7 +1115,7 @@ function TrustOrb() {
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute -right-4 bottom-28 hidden animate-float-slow sm:block",
+				className: "absolute -right-12 bottom-32 hidden animate-float-slow sm:block lg:-right-16 lg:bottom-36",
 				style: { animationDelay: "0.6s" },
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FloatingChip, {
 					icon: CalendarDays,
@@ -1001,7 +1124,7 @@ function TrustOrb() {
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute -left-2 bottom-10 hidden animate-float-slow sm:block",
+				className: "absolute -left-10 bottom-6 hidden animate-float-slow sm:block lg:-left-14 lg:bottom-8",
 				style: { animationDelay: "1.1s" },
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FloatingChip, {
 					icon: Banknote,
@@ -1023,19 +1146,19 @@ function TrustStat({ label, value }) {
 }
 function FloatingChip({ icon, title, sub, className = "", style }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: `glass-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`,
+		className: `floating-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`,
 		style,
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrandIcon, {
 			icon,
 			size: "sm",
-			variant: "orb"
+			variant: "gradient"
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "min-w-0 pr-1",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "text-xs font-semibold leading-tight text-white sm:text-sm",
+				className: "text-xs font-semibold leading-tight text-foreground sm:text-sm",
 				children: title
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "text-[10px] text-white/60 sm:text-[11px]",
+				className: "text-[10px] text-foreground/60 sm:text-[11px]",
 				children: sub
 			})]
 		})]
@@ -1208,11 +1331,11 @@ function CorporateBenefits() {
 	});
 }
 function Features() {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		id: "producto",
-		className: "section-shell",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "mx-auto max-w-7xl px-4 sm:px-6",
+		className: "section-shell section-surface-light relative overflow-hidden",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LightSectionDecorations, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative z-[1] mx-auto max-w-7xl px-4 sm:px-6",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Reveal, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionHeader, {
 				badge: "Beneficios",
 				title: "Bienestar para tu equipo, tranquilidad para tu empresa",
@@ -1254,28 +1377,29 @@ function Features() {
 					delay: i * 80,
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(GlassCard, {
 						as: "article",
+						light: true,
 						className: "group h-full p-5 sm:p-7",
 						hover: true,
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrandIcon, {
 								icon: Icon,
 								size: "lg",
-								variant: "orb",
-								className: "group-hover:scale-105 group-hover:shadow-[0_0_32px_hsl(265_55%_55%_/_0.4)]"
+								variant: "gradient",
+								className: "group-hover:scale-105 group-hover:shadow-[var(--shadow-brand)]"
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-								className: "mt-5 text-lg font-semibold text-white",
+								className: "mt-5 text-lg font-semibold text-foreground",
 								children: title
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "mt-2 text-sm leading-relaxed text-white/70",
+								className: "mt-2 text-sm leading-relaxed text-foreground/70",
 								children: desc
 							})
 						]
 					})
 				}, title))
 			})]
-		})
+		})]
 	});
 }
 var CUOTAS_STEPS = [
@@ -1442,35 +1566,36 @@ var HOW_IT_WORKS_STEPS = [
 		desc: "Nuestro equipo procesa y desembolsa el adelanto. Las cuotas se descuentan de la nómina sin trabajo extra para ti."
 	}
 ];
-function HowStepFigure({ n }) {
+function HowStepFigure({ n, light = false }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "how-works-figure relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500 sm:h-14 sm:w-14 sm:text-base",
+		className: "how-works-figure relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-primary-foreground shadow-[var(--shadow-brand)] ring-4 ring-transparent transition-shadow duration-500 sm:h-14 sm:w-14 sm:text-base",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "flex h-full w-full items-center justify-center rounded-xl",
-			style: { background: "var(--gradient-orb)" },
+			style: { background: light ? "var(--gradient-brand)" : "var(--gradient-orb)" },
 			children: n
 		})
 	});
 }
-function HowWorksStepCard({ title, desc }) {
+function HowWorksStepCard({ title, desc, light = false }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(GlassCard, {
 		as: "article",
+		light,
 		className: "group/step h-full p-5 sm:p-6",
 		hover: true,
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-				className: "text-base font-semibold text-white sm:text-lg",
+				className: `text-base font-semibold sm:text-lg ${light ? "text-foreground" : "text-white"}`,
 				children: title
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "mt-2 flex-1 text-sm leading-relaxed text-white/70",
+				className: `mt-2 flex-1 text-sm leading-relaxed ${light ? "text-foreground/70" : "text-white/70"}`,
 				children: desc
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "mt-4 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 group-hover/step:scale-x-100" })
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `mt-4 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover/step:scale-x-100 ${light ? "via-primary/30" : "via-white/35"}` })
 		]
 	});
 }
-function HowWorksTimeline({ active }) {
+function HowWorksTimeline({ active, light = false }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "how-works-timeline group/timeline relative mt-10 sm:mt-16",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1497,8 +1622,8 @@ function HowWorksTimeline({ active }) {
 						left: seg.left,
 						width: seg.width
 					},
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-full rounded-full bg-white/12" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: `how-works-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/40 via-white to-white/40 ${active ? "is-active" : ""}`,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `h-full rounded-full ${light ? "bg-primary/15" : "bg-white/12"}` }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: `how-works-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full ${light ? "bg-gradient-to-r from-primary/35 via-primary to-primary/35" : "bg-gradient-to-r from-white/40 via-white to-white/40"} ${active ? "is-active" : ""}`,
 						style: { transitionDelay: active ? `${240 + i * 120}ms` : "0ms" }
 					})]
 				}, seg.left))
@@ -1507,11 +1632,15 @@ function HowWorksTimeline({ active }) {
 				children: HOW_IT_WORKS_STEPS.map((step, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: `how-step-enter how-works-step group/step flex flex-col items-center ${active ? "is-active" : ""}`,
 					style: { transitionDelay: `${i * 150}ms` },
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowStepFigure, { n: step.n }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowStepFigure, {
+						n: step.n,
+						light
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "mt-4 w-full",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowWorksStepCard, {
 							title: step.title,
-							desc: step.desc
+							desc: step.desc,
+							light
 						})
 					})]
 				}, `lg-${step.n}`))
@@ -1523,10 +1652,14 @@ function HowWorksTimeline({ active }) {
 				style: { transitionDelay: `${i * 150}ms` },
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "mb-4 flex justify-center sm:justify-start",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowStepFigure, { n: step.n })
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowStepFigure, {
+						n: step.n,
+						light
+					})
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowWorksStepCard, {
 					title: step.title,
-					desc: step.desc
+					desc: step.desc,
+					light
 				})]
 			}, `sm-${step.n}`))
 		})]
@@ -1534,18 +1667,21 @@ function HowWorksTimeline({ active }) {
 }
 function HowItWorks() {
 	const { sectionRef, active } = useSectionActivation("como-funciona");
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		id: "como-funciona",
 		ref: sectionRef,
-		className: "section-shell relative overflow-hidden",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "mx-auto max-w-7xl px-4 sm:px-6",
+		className: "section-shell section-surface-light relative overflow-hidden",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LightSectionDecorations, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative z-[1] mx-auto max-w-7xl px-4 sm:px-6",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Reveal, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionHeader, {
 				badge: "Cómo funciona",
 				title: "Implementación simple. Impacto inmediato.",
 				subtitle: "Cuatro pasos para activar adelantos de nómina en tu empresa sin fricción operativa."
-			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowWorksTimeline, { active })]
-		})
+			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HowWorksTimeline, {
+				active,
+				light: true
+			})]
+		})]
 	});
 }
 function ForCompanies() {

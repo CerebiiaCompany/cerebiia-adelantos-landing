@@ -402,18 +402,131 @@
   }
 
   .landing-deco-outline {
-    background-color: hsl(0 0% 100% / 0.06);
-    border-color: hsl(0 0% 100% / 0.16);
+    background-color: hsl(0 0% 100% / 0.04);
+    border-color: hsl(0 0% 100% / 0.11);
   }
 
   .landing-deco-outline-sm {
-    background-color: hsl(0 0% 100% / 0.04);
-    border-color: hsl(0 0% 100% / 0.12);
+    background-color: hsl(0 0% 100% / 0.025);
+    border-color: hsl(0 0% 100% / 0.08);
   }
 
   .landing-deco-outline-lg {
-    background-color: hsl(0 0% 100% / 0.08);
-    border-color: hsl(0 0% 100% / 0.2);
+    background-color: hsl(0 0% 100% / 0.055);
+    border-color: hsl(0 0% 100% / 0.14);
+  }
+
+  .section-surface-light {
+    background-color: hsl(0 0% 100%);
+    color: hsl(220 20% 12%);
+  }
+
+  .section-surface-light .section-badge {
+    border-color: hsl(220 90% 55% / 0.18);
+    background: hsl(220 90% 55% / 0.06);
+    color: hsl(220 20% 40%);
+  }
+
+  .section-surface-light .section-title {
+    color: hsl(220 20% 12%);
+  }
+
+  .section-surface-light .section-subtitle {
+    color: hsl(220 10% 42%);
+  }
+
+  .light-deco-outline {
+    background-color: transparent;
+    border-color: transparent;
+    background-image:
+      linear-gradient(hsl(0 0% 100%), hsl(0 0% 100%)),
+      linear-gradient(135deg, hsl(220 90% 55% / 0.22), hsl(260 70% 55% / 0.22));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+
+  .light-deco-outline-sm {
+    background-color: transparent;
+    border-color: transparent;
+    background-image:
+      linear-gradient(hsl(0 0% 100%), hsl(0 0% 100%)),
+      linear-gradient(135deg, hsl(220 90% 55% / 0.16), hsl(260 70% 55% / 0.16));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+
+  .light-deco-outline-lg {
+    background-color: transparent;
+    border-color: transparent;
+    background-image:
+      linear-gradient(hsl(0 0% 100%), hsl(0 0% 100%)),
+      linear-gradient(135deg, hsl(220 90% 55% / 0.28), hsl(260 70% 55% / 0.28));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+
+  .glass-card-light {
+    border-radius: 1rem;
+    border: 1px solid hsl(220 14% 92%);
+    background: hsl(0 0% 100% / 0.92);
+    box-shadow: 0 8px 32px hsl(220 40% 50% / 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-card-light-hover {
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      box-shadow 0.35s ease;
+  }
+
+  .glass-card-light-hover:hover {
+    transform: translateY(-3px);
+    border-color: hsl(220 90% 55% / 0.22);
+    background: hsl(0 0% 100%);
+    box-shadow: 0 16px 48px hsl(220 40% 50% / 0.12);
+  }
+
+  .glass-card-light-hover.feature-benefit-card:hover {
+    border-color: hsl(262 48% 78% / 0.55);
+    background: hsl(262 58% 97%);
+    box-shadow: 0 14px 44px hsl(262 45% 55% / 0.14);
+  }
+
+  .benefit-card-icon {
+    transition:
+      color 0.3s ease,
+      transform 0.3s ease,
+      filter 0.3s ease;
+  }
+
+  .benefit-card-icon-dark {
+    color: hsl(0 0% 100% / 0.7);
+  }
+
+  .benefit-card-icon-light {
+    color: hsl(220 15% 45%);
+  }
+
+  .glass-card-hover:hover .benefit-card-icon-dark {
+    color: hsl(0 0% 100%);
+    filter: var(--shadow-orb-icon);
+    animation: benefit-icon-lift 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes benefit-icon-lift {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    45% {
+      transform: translateY(-5px) scale(1.12);
+    }
+    70% {
+      transform: translateY(-2px) scale(1.06);
+    }
   }
 
   @keyframes landing-drift-0 {
@@ -514,6 +627,76 @@
 
   .landing-shape-drift-4 {
     animation: landing-drift-4 55s ease-in-out infinite;
+  }
+
+  @keyframes corner-drift-0 {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(-1vw, -0.8vh);
+    }
+  }
+
+  @keyframes corner-drift-1 {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(1vw, -0.8vh);
+    }
+  }
+
+  @keyframes corner-drift-2 {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(-1vw, 0.8vh);
+    }
+  }
+
+  @keyframes corner-drift-3 {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(1vw, 0.8vh);
+    }
+  }
+
+  @keyframes corner-drift-4 {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(0.8vw, 0.6vh);
+    }
+  }
+
+  .corner-shape-drift-0 {
+    animation: corner-drift-0 52s ease-in-out infinite;
+  }
+
+  .corner-shape-drift-1 {
+    animation: corner-drift-1 56s ease-in-out infinite;
+  }
+
+  .corner-shape-drift-2 {
+    animation: corner-drift-2 54s ease-in-out infinite;
+  }
+
+  .corner-shape-drift-3 {
+    animation: corner-drift-3 58s ease-in-out infinite;
+  }
+
+  .corner-shape-drift-4 {
+    animation: corner-drift-4 55s ease-in-out infinite;
   }
 
   .bg-app-surface {
@@ -868,9 +1051,10 @@
   }
 
   .nav-btn-cta {
-    color: hsl(0 0% 100%);
-    background: var(--gradient-orb);
-    box-shadow: var(--shadow-orb);
+    color: hsl(262 55% 42%);
+    background: hsl(0 0% 100%);
+    font-weight: 600;
+    box-shadow: var(--shadow-cta-white);
     transition:
       transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
       background 0.3s ease,
@@ -879,9 +1063,9 @@
   }
 
   .nav-btn-cta:hover {
-    background: hsl(0 0% 100%);
-    color: hsl(220 20% 12%);
-    box-shadow: var(--shadow-cta-white);
+    background: hsl(0 0% 100% / 0.95);
+    color: hsl(262 55% 38%);
+    box-shadow: 0 0 14px hsl(0 0% 100% / 0.75), 0 0 28px hsl(0 0% 100% / 0.4);
   }
 
   .nav-btn-shimmer {
@@ -1133,19 +1317,69 @@
     box-shadow: 0 0 20px hsl(0 0% 100% / 0.35);
   }
 
-  /* How it works — entrada escalonada + timeline */
-  .how-step-enter {
+  .cuotas-timeline-figure::before {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    z-index: -1;
+    border-radius: 9999px;
+    background: var(--gradient-orb);
+    opacity: 0.4;
+    filter: blur(10px);
+    animation: cuotas-figure-glow 2.8s ease-in-out infinite;
+  }
+
+  .cuotas-figure-shine {
+    pointer-events: none;
+    position: absolute;
+    inset: -20%;
+    border-radius: 9999px;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      hsl(0 0% 100% / 0.55) 50%,
+      transparent 65%
+    );
+    animation: cuotas-figure-shine 2.6s ease-in-out infinite;
+  }
+
+  @keyframes cuotas-figure-shine {
+    0%,
+    100% {
+      transform: translateX(-130%) rotate(18deg);
+      opacity: 0.35;
+    }
+    50% {
+      transform: translateX(130%) rotate(18deg);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes cuotas-figure-glow {
+    0%,
+    100% {
+      opacity: 0.28;
+      transform: scale(0.92);
+    }
+    50% {
+      opacity: 0.55;
+      transform: scale(1.08);
+    }
+  }
+
+  /* How it works — caída de tarjetas + timeline */
+  .how-step-card-fall {
     opacity: 0;
-    transform: translateY(28px) scale(0.97);
+    transform: translateY(-3.25rem);
     transition:
-      opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-      transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.34, 1.28, 0.64, 1);
     will-change: opacity, transform;
   }
 
-  .how-step-enter.is-active {
+  .how-step-card-fall.is-active {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 
   .how-works-segment-fill {
@@ -1156,10 +1390,44 @@
     transform: scaleX(1);
   }
 
+  .how-figure-shine {
+    pointer-events: none;
+    position: absolute;
+    inset: -20%;
+    border-radius: 9999px;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      hsl(0 0% 100% / 0.65) 50%,
+      transparent 65%
+    );
+    transform: translateX(-130%) rotate(18deg);
+    opacity: 0;
+  }
+
+  .how-works-figure:hover .how-figure-shine {
+    animation: how-figure-shine 0.65s ease-out forwards;
+  }
+
+  @keyframes how-figure-shine {
+    0% {
+      transform: translateX(-130%) rotate(18deg);
+      opacity: 0;
+    }
+    35% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateX(130%) rotate(18deg);
+      opacity: 0;
+    }
+  }
+
   .how-works-timeline:hover .how-works-figure,
-  .how-works-timeline:has(.how-works-step:hover) .how-works-figure {
-    --tw-ring-color: hsl(0 0% 100% / 0.35);
-    box-shadow: 0 0 20px hsl(0 0% 100% / 0.35);
+  .how-works-timeline:has(.how-works-step:hover) .how-works-figure,
+  .how-works-figure:hover {
+    --tw-ring-color: hsl(220 90% 55% / 0.28);
+    box-shadow: 0 0 18px hsl(220 90% 55% / 0.35);
   }
 
   .nav-menu-icon {
@@ -1289,10 +1557,17 @@
       transform: scaleY(1);
       transition: none;
     }
-    .how-step-enter {
+    .cuotas-figure-shine,
+    .cuotas-timeline-figure::before {
+      animation: none;
+    }
+    .how-step-card-fall {
       opacity: 1;
       transform: none;
       transition: none;
+    }
+    .how-works-figure:hover .how-figure-shine {
+      animation: none;
     }
     .how-works-segment-fill.is-active {
       transform: scaleX(1);
@@ -1300,6 +1575,12 @@
     }
     .glass-card-hover:hover {
       transform: none;
+    }
+    .glass-card-light-hover:hover {
+      transform: none;
+    }
+    .glass-card-hover:hover .benefit-card-icon-dark {
+      animation: none;
     }
     .mobile-sheet[data-state="open"] .mobile-sheet-header,
     .mobile-sheet[data-state="open"] .mobile-nav-item,
@@ -1326,7 +1607,12 @@
     .landing-shape-drift-1,
     .landing-shape-drift-2,
     .landing-shape-drift-3,
-    .landing-shape-drift-4 {
+    .landing-shape-drift-4,
+    .corner-shape-drift-0,
+    .corner-shape-drift-1,
+    .corner-shape-drift-2,
+    .corner-shape-drift-3,
+    .corner-shape-drift-4 {
       animation: none;
     }
   }
