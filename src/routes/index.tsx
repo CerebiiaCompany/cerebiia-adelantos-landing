@@ -13,7 +13,6 @@ import {
   HeartHandshake,
   Menu,
   X,
-  ChevronDown,
   House,
   Medal,
   Banknote,
@@ -209,6 +208,23 @@ function GlassButtonSecondary({
   return (
     <a href={href} className={`btn-glass-secondary nav-btn-lift ${className}`}>
       {children}
+    </a>
+  );
+}
+
+function GlassButtonEmployeeAccess({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <a href={href} className={`btn-glass-employee ${className}`}>
+      <span className="btn-glass-employee-shimmer" aria-hidden />
+      <span className="relative">{children}</span>
     </a>
   );
 }
@@ -455,14 +471,8 @@ function Logo({ inverted = false }: { inverted?: boolean }) {
   return (
     <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold sm:h-10 sm:w-10 sm:text-lg ${
-          inverted
-            ? "text-primary-foreground shadow-[var(--shadow-orb)]"
-            : "text-primary-foreground shadow-[var(--shadow-brand)]"
-        }`}
-        style={{
-          background: inverted ? "var(--gradient-orb)" : "var(--gradient-brand)",
-        }}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold text-primary-foreground shadow-[var(--shadow-brand)] sm:h-10 sm:w-10 sm:text-lg"
+        style={{ background: "var(--gradient-brand)" }}
       >
         A
       </div>
@@ -478,6 +488,42 @@ function Logo({ inverted = false }: { inverted?: boolean }) {
 }
 
 /* ---------- Nav ---------- */
+function NavInlineLink({
+  href,
+  label,
+  icon: Icon,
+  onClick,
+  index = 0,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  index?: number;
+}) {
+  const iconAnim =
+    NAV_ICON_HOVER_ANIM[href as keyof typeof NAV_ICON_HOVER_ANIM] ?? "nav-icon-anim-home";
+
+  return (
+    <a
+      href={href}
+      title={label}
+      onClick={onClick}
+      style={{ animationDelay: `${index * 55}ms` }}
+      className="nav-inline-link nav-item-enter group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white transition-all duration-300 xl:px-3.5"
+    >
+      <span className={`nav-card-icon inline-flex ${iconAnim}`}>
+        <Icon
+          className="nav-inline-icon h-4 w-4 text-white transition-all duration-300"
+          strokeWidth={2.25}
+          aria-hidden
+        />
+      </span>
+      <span className="relative whitespace-nowrap">{label}</span>
+    </a>
+  );
+}
+
 function NavCardLink({
   href,
   label,
@@ -538,17 +584,9 @@ function NavAuthButtons({
       <a
         href={LOGIN_URL}
         onClick={onNavigate}
-        className={`${visibility} items-center justify-center text-xs font-medium text-white/90 transition-all duration-300 hover:translate-x-0.5 hover:text-white sm:text-sm ${stacked ? "mobile-sheet-footer-item mobile-sheet-login w-full py-2.5" : "px-1"}`}
+        className={`nav-link-ingresar ${visibility} mobile-sheet-footer-item mobile-sheet-login items-center text-xs font-medium sm:text-sm ${stacked ? "w-full justify-center py-2.5" : "px-1"}`}
       >
-        Inicia sesión
-      </a>
-      <a
-        href={REGISTER_URL}
-        onClick={onNavigate}
-        className={`${visibility} nav-btn-lift mobile-sheet-footer-item mobile-sheet-register items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-orb)] transition-all hover:shadow-[var(--shadow-cta-white)] sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "w-full" : ""}`}
-        style={{ background: "var(--gradient-orb)" }}
-      >
-        Regístrate
+        Ingresar
       </a>
     </div>
   );
@@ -571,7 +609,7 @@ function NavCta({
       target="_blank"
       rel="noopener noreferrer"
       onClick={onNavigate}
-      className={`nav-cta-group ${visibility} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`}
+      className={`nav-btn-cta nav-btn-lift ${visibility} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`}
     >
       Contáctanos
       <ArrowRight className="nav-arrow-slide h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
@@ -581,50 +619,79 @@ function NavCta({
 
 function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [navCardsOpen, setNavCardsOpen] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const SCROLL_THRESHOLD = 10;
+
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 12);
+
+      if (currentScrollY <= 12) {
+        setNavVisible(true);
+      } else {
+        const delta = currentScrollY - lastScrollY.current;
+        if (delta > SCROLL_THRESHOLD) {
+          setNavVisible(false);
+        } else if (delta < -SCROLL_THRESHOLD) {
+          setNavVisible(true);
+        }
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (mobileOpen) setNavVisible(true);
+  }, [mobileOpen]);
+
   return (
     <header
-      className={`nav-header-enter sticky top-0 z-40 w-full border-b border-white/15 bg-white/8 text-white backdrop-blur-xl transition-shadow duration-500 ${
+      className={`nav-header-enter nav-header-scrollable sticky top-0 z-40 w-full border-b border-white/15 bg-white/8 text-white backdrop-blur-xl ${
         scrolled ? "border-white/20 bg-white/12 shadow-[0_8px_40px_rgba(15,23,42,0.22)]" : ""
-      }`}
+      } ${navVisible ? "nav-header-visible" : "nav-header-hidden"}`}
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8 lg:py-3">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-            <a
-              href="#inicio"
-              className="nav-logo-hover shrink-0"
-              aria-label="AdeCerebiia — inicio"
-            >
-              <Logo inverted />
-            </a>
-            <button
-              type="button"
-              aria-expanded={navCardsOpen}
-              aria-controls="nav-cards-menu"
-              onClick={() => setNavCardsOpen((open) => !open)}
-              className="nav-cards-toggle hidden h-6 w-6 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors duration-200 hover:text-white/75 lg:inline-flex"
-              aria-label={navCardsOpen ? "Ocultar menú de navegación" : "Mostrar menú de navegación"}
-            >
-              <ChevronDown
-                className={`h-3.5 w-3.5 transition-transform duration-300 ${navCardsOpen ? "rotate-180" : ""}`}
-                strokeWidth={2.25}
+        <div className="flex items-center gap-3 lg:gap-4">
+          <a
+            href="#inicio"
+            className="nav-logo-hover shrink-0"
+            aria-label="AdeCerebiia — inicio"
+          >
+            <Logo inverted />
+          </a>
+
+          <nav
+            className="nav-item-enter hidden min-w-0 flex-1 items-center justify-end gap-0.5 lg:flex xl:gap-1"
+            style={{ animationDelay: "180ms" }}
+            aria-label="Navegación principal"
+          >
+            {NAV_LINKS.map((link, i) => (
+              <NavInlineLink
+                key={link.href}
+                {...link}
+                index={i}
+                onClick={(event) => {
+                  if (link.href.startsWith("#")) {
+                    event.preventDefault();
+                    navigateToHash(link.href);
+                  }
+                }}
               />
-            </button>
-          </div>
+            ))}
+          </nav>
 
           <div
-            className="nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5"
+            className="nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5 lg:ml-0"
             style={{ animationDelay: "350ms" }}
           >
             <NavAuthButtons />
@@ -682,20 +749,6 @@ function Nav() {
             </Sheet>
           </div>
         </div>
-
-        <nav
-          id="nav-cards-menu"
-          aria-label="Navegación principal"
-          className={`nav-cards-panel hidden w-full overflow-hidden transition-all duration-300 ease-out lg:grid lg:grid-cols-5 lg:gap-1.5 xl:gap-2 ${
-            navCardsOpen
-              ? "mt-2 max-h-28 opacity-100 xl:mt-2.5"
-              : "mt-0 max-h-0 opacity-0 pointer-events-none"
-          }`}
-        >
-          {NAV_LINKS.map((link, i) => (
-            <NavCardLink key={link.href} {...link} index={i} />
-          ))}
-        </nav>
       </div>
     </header>
   );
@@ -704,24 +757,24 @@ function Nav() {
 /* ---------- Hero ---------- */
 const HERO_HIGHLIGHTS = [
   {
-    icon: Bolt,
-    title: "Disponible al instante",
-    desc: "Accede a tu salario ganado cuando lo necesites, sin trámites.",
+    icon: CalendarDays,
+    title: "Control Operativo Total",
+    desc: "Define ventanas de tiempo personalizadas. Las solicitudes se desactivan automáticamente antes del cierre de nómina para garantizar un proceso contable limpio.",
   },
   {
-    icon: ShieldCheck,
-    title: "Totalmente seguro",
-    desc: "Tus datos y transacciones protegidos con los más altos estándares.",
+    icon: Workflow,
+    title: "Cero Carga Administrativa",
+    desc: "Transforma las solicitudes manuales en un registro digital centralizado, ordenado y auditable.",
   },
   {
-    icon: Banknote,
-    title: "Hasta 3 cuotas",
-    desc: "Paga con flexibilidad en 1, 2 o 3 cuotas desde tu nómina.",
+    icon: TrendingUp,
+    title: "Conciliación sin Errores",
+    desc: "Exporta reportes consolidados listos para aplicar a tu software de nómina tradicional al finalizar el periodo permitido.",
   },
 ] as const;
 
 function HeroHighlight({
-  icon,
+  icon: Icon,
   title,
   desc,
 }: {
@@ -731,7 +784,11 @@ function HeroHighlight({
 }) {
   return (
     <GlassCard className="flex items-start gap-3.5 p-4 sm:gap-4 sm:p-5" hover>
-      <BrandIcon icon={icon} size="md" variant="orb" />
+      <Icon
+        className="mt-0.5 h-5 w-5 shrink-0 text-white sm:h-6 sm:w-6"
+        strokeWidth={2.25}
+        aria-hidden
+      />
       <div className="min-w-0 pt-0.5">
         <div className="text-sm font-semibold text-white sm:text-base">{title}</div>
         <div className="mt-0.5 text-xs leading-relaxed text-white/70 sm:text-sm">{desc}</div>
@@ -751,16 +808,17 @@ function Hero() {
                 <Logo inverted />
               </div>
               <div className="section-badge mt-6 sm:mt-6 lg:mt-0">
-                Plataforma de adelantos de nómina
+                Gestión de adelantos de nómina
               </div>
               <h1 className="mt-5 text-[1.75rem] font-bold leading-[1.12] tracking-tight text-white sm:mt-6 sm:text-4xl sm:leading-[1.08] lg:text-5xl">
-                Tu dinero,
+                Bienestar para tu equipo,
                 <br />
-                <span className="text-gradient-soft">a tu ritmo.</span>
+                <span className="text-gradient-soft">control para tu empresa.</span>
               </h1>
               <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 sm:text-base">
-                Ofrece a tus empleados acceso al salario que ya ganaron, con la flexibilidad de
-                pagarlo hasta en 3 cuotas. La empresa no paga nada.
+                Automatiza, gestiona y registra las solicitudes de adelanto de nómina de tus
+                colaboradores. Una plataforma diseñada para integrarse a tu flujo operativo actual
+                de forma fluida, elegante y segura.
               </p>
 
               <div className="mt-8 space-y-4 sm:space-y-5">
@@ -777,6 +835,12 @@ function Hero() {
                   Regístrate gratis
                   <ArrowRight className="h-4 w-4" />
                 </GlassButtonPrimary>
+                <GlassButtonEmployeeAccess
+                  href={REGISTER_URL}
+                  className="w-full gap-2 sm:w-auto"
+                >
+                  Activar Acceso Empleado
+                </GlassButtonEmployeeAccess>
                 <GlassButtonSecondary
                   href={LOGIN_URL}
                   className="w-full justify-center gap-2 sm:w-auto"
@@ -788,8 +852,8 @@ function Hero() {
           </Reveal>
 
           <Reveal delay={150}>
-            <div className="relative flex min-h-[320px] items-center justify-center sm:min-h-[420px] lg:min-h-full">
-              <div className="relative w-full max-w-sm">
+            <div className="relative flex min-h-[320px] items-center justify-center overflow-visible sm:min-h-[420px] lg:min-h-full lg:justify-end">
+              <div className="relative w-full max-w-sm overflow-visible lg:translate-x-6 xl:translate-x-10">
                 <TrustOrb />
               </div>
             </div>
@@ -800,66 +864,47 @@ function Hero() {
   );
 }
 
-/* ---------- Hero visual: refined, calm, premium ---------- */
+/* ---------- Hero visual: white card, original content ---------- */
 function TrustOrb() {
   return (
-    <div className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]">
-      {/* Soft ambient glow */}
-      <div
-        className="absolute -inset-6 -z-10 rounded-[3rem] opacity-40 blur-3xl sm:-inset-10"
-        style={{ background: "var(--gradient-orb)" }}
-      />
-      {/* Subtle dotted grid */}
-      <div
-        className="absolute inset-0 -z-10 opacity-[0.18]"
-        style={{
-          backgroundImage:
-            "radial-gradient(oklch(0.52 0.24 268 / 0.5) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
-      />
+    <div className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] overflow-visible sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]">
+      <div className="absolute -inset-6 -z-10 rounded-[3rem] bg-white/50 opacity-70 blur-3xl sm:-inset-10" />
 
-      {/* Back card — depth */}
       <div
-        className="absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-md sm:top-6"
+        className="absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border-2 landing-deco-outline-lg sm:top-6"
         style={{ transform: "translate(-46%, 0) rotate(-5deg)" }}
       />
 
-      {/* Main brand card */}
-      <div
-        className="relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl p-5 text-primary-foreground shadow-[var(--shadow-orb)] animate-float-slow sm:rounded-3xl sm:p-8"
-        style={{ background: "var(--gradient-orb)" }}
-      >
-        {/* Decorative rings */}
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/15" />
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full border border-white/10" />
+      <div className="relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl border border-foreground/8 bg-white p-5 text-foreground shadow-[0_20px_50px_rgba(15,23,42,0.1)] animate-float-slow sm:rounded-3xl sm:p-8">
+        <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border-2 border-primary/20 bg-transparent sm:h-96 sm:w-96" />
+        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full border-2 border-accent/25 bg-transparent sm:h-96 sm:w-96" />
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="relative z-[1] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md">
-              <span className="text-sm font-bold">A</span>
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              A
             </div>
-            <span className="text-sm font-semibold tracking-tight opacity-95">AdeCerebiia</span>
+            <span className="text-sm font-semibold tracking-tight text-foreground">AdeCerebiia</span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-medium backdrop-blur-md">
+          <div className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-[10px] font-medium text-foreground/75">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
             </span>
             En línea
           </div>
         </div>
 
-        {/* Brand emblem with pulse */}
-        <div className="relative mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40">
-          <span className="absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring" />
+        <div className="relative z-[1] mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40">
+          <span className="absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring" />
           <span
-            className="absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring"
+            className="absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring"
             style={{ animationDelay: "1.2s" }}
           />
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.2)] ring-4 ring-white/30 sm:h-28 sm:w-28">
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)] ring-4 ring-primary/12 sm:h-28 sm:w-28">
             <ShieldCheck className="h-9 w-9 text-accent sm:h-11 sm:w-11" strokeWidth={2.25} />
             <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-accent shadow-lg ring-2 ring-accent/20 sm:h-9 sm:w-9">
               <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
@@ -867,32 +912,37 @@ function TrustOrb() {
           </div>
         </div>
 
-        {/* Tagline */}
-        <div className="mt-6 text-center sm:mt-10">
-          <div className="text-[10px] font-medium uppercase tracking-[0.2em] opacity-70 sm:text-[11px]">
+        <div className="relative z-[1] mt-6 text-center sm:mt-10">
+          <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/50 sm:text-[11px]">
             Confianza · Bienestar
           </div>
-          <div className="mt-2 text-xl font-bold leading-tight sm:text-2xl">
-            Adelantos seguros<br />para tu equipo
+          <div className="mt-2 text-xl font-bold leading-tight text-foreground sm:text-2xl">
+            Adelantos seguros
+            <br />
+            para tu equipo
           </div>
         </div>
 
-        {/* Mini trust rail */}
-        <div className="mt-6 grid grid-cols-3 gap-1.5 border-t border-white/20 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5">
+        <div className="relative z-[1] mt-6 grid grid-cols-3 gap-1.5 border-t border-foreground/8 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5">
           <TrustStat label="Cuotas" value="Hasta 3" />
           <TrustStat label="Costo empresa" value="$0" />
           <TrustStat label="Tarifa" value="$8.000" />
         </div>
       </div>
 
-      {/* Floating accent chips — hidden on narrow mobile to avoid overflow */}
-      <div className="absolute -left-4 top-24 hidden animate-float sm:block">
+      <div className="absolute -left-12 top-16 hidden animate-float sm:block lg:-left-16 lg:top-20">
         <FloatingChip icon={HeartHandshake} title="Sin riesgo" sub="Para tu empresa" />
       </div>
-      <div className="absolute -right-4 bottom-28 hidden animate-float-slow sm:block" style={{ animationDelay: "0.6s" }}>
+      <div
+        className="absolute -right-12 bottom-32 hidden animate-float-slow sm:block lg:-right-16 lg:bottom-36"
+        style={{ animationDelay: "0.6s" }}
+      >
         <FloatingChip icon={CalendarDays} title="Hasta 3 cuotas" sub="Flexibilidad de pago" />
       </div>
-      <div className="absolute -left-2 bottom-10 hidden animate-float-slow sm:block" style={{ animationDelay: "1.1s" }}>
+      <div
+        className="absolute -left-10 bottom-6 hidden animate-float-slow sm:block lg:-left-14 lg:bottom-8"
+        style={{ animationDelay: "1.1s" }}
+      >
         <FloatingChip icon={Banknote} title="Tarifa fija" sub="$8.000 por adelanto" />
       </div>
     </div>
@@ -902,8 +952,8 @@ function TrustOrb() {
 function TrustStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider opacity-70">{label}</div>
-      <div className="mt-1 text-sm font-bold">{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-foreground/50">{label}</div>
+      <div className="mt-1 text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }
@@ -923,13 +973,13 @@ function FloatingChip({
 }) {
   return (
     <div
-      className={`glass-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`}
+      className={`floating-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`}
       style={style}
     >
-      <BrandIcon icon={icon} size="sm" variant="orb" />
+      <BrandIcon icon={icon} size="sm" variant="gradient" />
       <div className="min-w-0 pr-1">
-        <div className="text-xs font-semibold leading-tight text-white sm:text-sm">{title}</div>
-        <div className="text-[10px] text-white/60 sm:text-[11px]">{sub}</div>
+        <div className="text-xs font-semibold leading-tight text-foreground sm:text-sm">{title}</div>
+        <div className="text-[10px] text-foreground/60 sm:text-[11px]">{sub}</div>
       </div>
     </div>
   );

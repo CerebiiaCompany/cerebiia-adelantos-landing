@@ -2,10 +2,10 @@ import { r as __toESM } from "../_runtime.mjs";
 import { r as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { r as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { a as Portal, c as Trigger, i as Overlay, n as Content, o as Root, r as Description, s as Title, t as Close } from "../_libs/@radix-ui/react-dialog+[...].mjs";
-import { _ as ArrowRight, a as Smartphone, c as Medal, d as CircleCheck, f as ChevronDown, g as Banknote, h as Bolt, i as TrendingUp, l as House, m as Building2, n as Workflow, o as ShieldCheck, p as CalendarDays, r as Users, s as Menu, t as X, u as HeartHandshake } from "../_libs/lucide-react.mjs";
+import { a as Smartphone, c as Medal, d as CircleCheck, f as CalendarDays, g as ArrowRight, h as Banknote, i as TrendingUp, l as House, m as Bolt, n as Workflow, o as ShieldCheck, p as Building2, r as Users, s as Menu, t as X, u as HeartHandshake } from "../_libs/lucide-react.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DlRVhejc.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-sMHeRico.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function cn(...inputs) {
@@ -203,6 +203,19 @@ function GlassButtonSecondary({ href, children, className = "" }) {
 		href,
 		className: `btn-glass-secondary nav-btn-lift ${className}`,
 		children
+	});
+}
+function GlassButtonEmployeeAccess({ href, children, className = "" }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+		href,
+		className: `btn-glass-employee ${className}`,
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: "btn-glass-employee-shimmer",
+			"aria-hidden": true
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: "relative",
+			children
+		})]
 	});
 }
 function CheckIcon({ light = false }) {
@@ -579,6 +592,27 @@ function Logo({ inverted = false }) {
 		})]
 	});
 }
+function NavInlineLink({ href, label, icon: Icon, onClick, index = 0 }) {
+	const iconAnim = NAV_ICON_HOVER_ANIM[href] ?? "nav-icon-anim-home";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+		href,
+		title: label,
+		onClick,
+		style: { animationDelay: `${index * 55}ms` },
+		className: "nav-inline-link nav-item-enter group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white/70 transition-all duration-300 hover:text-white xl:px-3.5",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: `nav-card-icon inline-flex ${iconAnim}`,
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+				className: "nav-inline-icon h-4 w-4 text-white/55 transition-all duration-300 group-hover:text-white",
+				strokeWidth: 2.25,
+				"aria-hidden": true
+			})
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: "relative whitespace-nowrap",
+			children: label
+		})]
+	});
+}
 function NavCardLink({ href, label, icon: Icon, onClick, index = 0, className = "", mobile = false }) {
 	const iconAnim = NAV_ICON_HOVER_ANIM[href] ?? "nav-icon-anim-home";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
@@ -602,20 +636,14 @@ function NavCardLink({ href, label, icon: Icon, onClick, index = 0, className = 
 }
 function NavAuthButtons({ className = "", stacked = false, onNavigate }) {
 	const visibility = stacked ? "inline-flex" : "hidden lg:inline-flex";
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: `flex items-center gap-3 ${stacked ? "w-full flex-col" : ""} ${className}`,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 			href: LOGIN_URL,
 			onClick: onNavigate,
-			className: `${visibility} items-center justify-center text-xs font-medium text-white/90 transition-all duration-300 hover:translate-x-0.5 hover:text-white sm:text-sm ${stacked ? "mobile-sheet-footer-item mobile-sheet-login w-full py-2.5" : "px-1"}`,
-			children: "Inicia sesión"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-			href: REGISTER_URL,
-			onClick: onNavigate,
-			className: `${visibility} nav-btn-lift mobile-sheet-footer-item mobile-sheet-register items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium text-white shadow-[var(--shadow-orb)] transition-all hover:shadow-[var(--shadow-cta-white)] sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "w-full" : ""}`,
-			style: { background: "var(--gradient-orb)" },
-			children: "Regístrate"
-		})]
+			className: `nav-btn-ingresar ${visibility} nav-btn-lift mobile-sheet-footer-item mobile-sheet-register items-center justify-center rounded-full px-3 py-1.5 text-xs font-medium sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "w-full" : ""}`,
+			children: "Ingresar"
+		})
 	});
 }
 function NavCta({ className = "", stacked = false, onNavigate }) {
@@ -624,133 +652,144 @@ function NavCta({ className = "", stacked = false, onNavigate }) {
 		target: "_blank",
 		rel: "noopener noreferrer",
 		onClick: onNavigate,
-		className: `nav-cta-group ${stacked ? "inline-flex" : "hidden lg:inline-flex"} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-white sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`,
+		className: `nav-btn-ingresar nav-btn-lift ${stacked ? "inline-flex" : "hidden lg:inline-flex"} items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium sm:gap-2 sm:text-sm sm:px-3.5 sm:py-2 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`,
 		children: ["Contáctanos", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "nav-arrow-slide h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" })]
 	});
 }
 function Nav() {
 	const [mobileOpen, setMobileOpen] = (0, import_react.useState)(false);
-	const [navCardsOpen, setNavCardsOpen] = (0, import_react.useState)(true);
 	const [scrolled, setScrolled] = (0, import_react.useState)(false);
+	const [navVisible, setNavVisible] = (0, import_react.useState)(true);
+	const lastScrollY = (0, import_react.useRef)(0);
 	const closeMobileMenu = (0, import_react.useCallback)(() => setMobileOpen(false), []);
 	(0, import_react.useEffect)(() => {
-		const onScroll = () => setScrolled(window.scrollY > 12);
+		const SCROLL_THRESHOLD = 10;
+		const onScroll = () => {
+			const currentScrollY = window.scrollY;
+			setScrolled(currentScrollY > 12);
+			if (currentScrollY <= 12) setNavVisible(true);
+			else {
+				const delta = currentScrollY - lastScrollY.current;
+				if (delta > SCROLL_THRESHOLD) setNavVisible(false);
+				else if (delta < -10) setNavVisible(true);
+			}
+			lastScrollY.current = currentScrollY;
+		};
 		onScroll();
 		window.addEventListener("scroll", onScroll, { passive: true });
 		return () => window.removeEventListener("scroll", onScroll);
 	}, []);
+	(0, import_react.useEffect)(() => {
+		if (mobileOpen) setNavVisible(true);
+	}, [mobileOpen]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("header", {
-		className: `nav-header-enter sticky top-0 z-40 w-full border-b border-white/15 bg-white/8 text-white backdrop-blur-xl transition-shadow duration-500 ${scrolled ? "border-white/20 bg-white/12 shadow-[0_8px_40px_rgba(15,23,42,0.22)]" : ""}`,
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: `nav-header-enter nav-header-scrollable sticky top-0 z-40 w-full border-b border-white/15 bg-white/8 text-white backdrop-blur-xl ${scrolled ? "border-white/20 bg-white/12 shadow-[0_8px_40px_rgba(15,23,42,0.22)]" : ""} ${navVisible ? "nav-header-visible" : "nav-header-hidden"}`,
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8 lg:py-3",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex items-center gap-2 sm:gap-3",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex shrink-0 items-center gap-0.5 sm:gap-1",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center gap-3 lg:gap-4",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 						href: "#inicio",
 						className: "nav-logo-hover shrink-0",
 						"aria-label": "AdeCerebiia — inicio",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Logo, { inverted: true })
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						"aria-expanded": navCardsOpen,
-						"aria-controls": "nav-cards-menu",
-						onClick: () => setNavCardsOpen((open) => !open),
-						className: "nav-cards-toggle hidden h-6 w-6 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors duration-200 hover:text-white/75 lg:inline-flex",
-						"aria-label": navCardsOpen ? "Ocultar menú de navegación" : "Mostrar menú de navegación",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, {
-							className: `h-3.5 w-3.5 transition-transform duration-300 ${navCardsOpen ? "rotate-180" : ""}`,
-							strokeWidth: 2.25
-						})
-					})]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5",
-					style: { animationDelay: "350ms" },
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavAuthButtons, {}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCta, {}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Sheet, {
-							open: mobileOpen,
-							onOpenChange: setMobileOpen,
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SheetTrigger, {
-								asChild: true,
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									"aria-expanded": mobileOpen,
-									className: "nav-menu-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:bg-white/20 lg:hidden sm:h-10 sm:w-10",
-									"aria-label": mobileOpen ? "Cerrar menú" : "Abrir menú",
-									children: mobileOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "nav-menu-icon h-5 w-5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Menu, { className: "nav-menu-icon h-5 w-5" })
-								})
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SheetContent, {
-								side: "right",
-								className: "mobile-sheet flex w-[min(100vw,22rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 border-l border-white/15 bg-white/8 p-0 text-white shadow-[-8px_0_40px_rgba(15,23,42,0.35)] backdrop-blur-2xl",
-								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-										className: "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,hsl(265_55%_55%_/_0.18),transparent_55%)]",
-										"aria-hidden": true
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SheetHeader, {
-										className: "mobile-sheet-header relative border-b border-white/15 px-4 py-4 text-left sm:px-6 sm:py-5",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SheetTitle, {
-											className: "sr-only",
-											children: "Menú de navegación"
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Logo, { inverted: true })]
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
-										className: "mobile-sheet-nav relative grid grid-cols-2 gap-3 p-4 sm:grid-cols-2",
-										"aria-label": "Menú móvil",
-										children: NAV_LINKS.map((link, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCardLink, {
-											...link,
-											index: i,
-											mobile: true,
-											className: "min-w-0 w-full py-3.5",
-											onClick: (event) => handleMobileNavClick(link.href, closeMobileMenu, event)
-										}, link.href))
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-										className: "mobile-sheet-footer relative mt-auto space-y-3 border-t border-white/15 p-4",
-										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavAuthButtons, {
-											stacked: true,
-											onNavigate: closeMobileMenu
-										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCta, {
-											stacked: true,
-											className: "justify-center",
-											onNavigate: closeMobileMenu
-										})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
+						className: "nav-item-enter hidden min-w-0 flex-1 items-center justify-end gap-0.5 lg:flex xl:gap-1",
+						style: { animationDelay: "180ms" },
+						"aria-label": "Navegación principal",
+						children: NAV_LINKS.map((link, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavInlineLink, {
+							...link,
+							index: i,
+							onClick: (event) => {
+								if (link.href.startsWith("#")) {
+									event.preventDefault();
+									navigateToHash(link.href);
+								}
+							}
+						}, link.href))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5 lg:ml-0",
+						style: { animationDelay: "350ms" },
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavAuthButtons, {}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCta, {}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Sheet, {
+								open: mobileOpen,
+								onOpenChange: setMobileOpen,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SheetTrigger, {
+									asChild: true,
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										"aria-expanded": mobileOpen,
+										className: "nav-menu-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:bg-white/20 lg:hidden sm:h-10 sm:w-10",
+										"aria-label": mobileOpen ? "Cerrar menú" : "Abrir menú",
+										children: mobileOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "nav-menu-icon h-5 w-5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Menu, { className: "nav-menu-icon h-5 w-5" })
 									})
-								]
-							})]
-						})
-					]
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
-				id: "nav-cards-menu",
-				"aria-label": "Navegación principal",
-				className: `nav-cards-panel hidden w-full overflow-hidden transition-all duration-300 ease-out lg:grid lg:grid-cols-5 lg:gap-1.5 xl:gap-2 ${navCardsOpen ? "mt-2 max-h-28 opacity-100 xl:mt-2.5" : "mt-0 max-h-0 opacity-0 pointer-events-none"}`,
-				children: NAV_LINKS.map((link, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCardLink, {
-					...link,
-					index: i
-				}, link.href))
-			})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SheetContent, {
+									side: "right",
+									className: "mobile-sheet flex w-[min(100vw,22rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 border-l border-white/15 bg-white/8 p-0 text-white shadow-[-8px_0_40px_rgba(15,23,42,0.35)] backdrop-blur-2xl",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,hsl(265_55%_55%_/_0.18),transparent_55%)]",
+											"aria-hidden": true
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SheetHeader, {
+											className: "mobile-sheet-header relative border-b border-white/15 px-4 py-4 text-left sm:px-6 sm:py-5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SheetTitle, {
+												className: "sr-only",
+												children: "Menú de navegación"
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Logo, { inverted: true })]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
+											className: "mobile-sheet-nav relative grid grid-cols-2 gap-3 p-4 sm:grid-cols-2",
+											"aria-label": "Menú móvil",
+											children: NAV_LINKS.map((link, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCardLink, {
+												...link,
+												index: i,
+												mobile: true,
+												className: "min-w-0 w-full py-3.5",
+												onClick: (event) => handleMobileNavClick(link.href, closeMobileMenu, event)
+											}, link.href))
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "mobile-sheet-footer relative mt-auto space-y-3 border-t border-white/15 p-4",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavAuthButtons, {
+												stacked: true,
+												onNavigate: closeMobileMenu
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NavCta, {
+												stacked: true,
+												className: "justify-center",
+												onNavigate: closeMobileMenu
+											})]
+										})
+									]
+								})]
+							})
+						]
+					})
+				]
+			})
 		})
 	});
 }
 var HERO_HIGHLIGHTS = [
 	{
-		icon: Bolt,
-		title: "Disponible al instante",
-		desc: "Accede a tu salario ganado cuando lo necesites, sin trámites."
+		icon: CalendarDays,
+		title: "Control Operativo Total",
+		desc: "Define ventanas de tiempo personalizadas. Las solicitudes se desactivan automáticamente antes del cierre de nómina para garantizar un proceso contable limpio."
 	},
 	{
-		icon: ShieldCheck,
-		title: "Totalmente seguro",
-		desc: "Tus datos y transacciones protegidos con los más altos estándares."
+		icon: Workflow,
+		title: "Cero Carga Administrativa",
+		desc: "Transforma las solicitudes manuales en un registro digital centralizado, ordenado y auditable."
 	},
 	{
-		icon: Banknote,
-		title: "Hasta 3 cuotas",
-		desc: "Paga con flexibilidad en 1, 2 o 3 cuotas desde tu nómina."
+		icon: TrendingUp,
+		title: "Conciliación sin Errores",
+		desc: "Exporta reportes consolidados listos para aplicar a tu software de nómina tradicional al finalizar el periodo permitido."
 	}
 ];
 function HeroHighlight({ icon, title, desc }) {
@@ -790,22 +829,22 @@ function Hero() {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "section-badge mt-6 sm:mt-6 lg:mt-0",
-							children: "Plataforma de adelantos de nómina"
+							children: "Gestión de adelantos de nómina"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
 							className: "mt-5 text-[1.75rem] font-bold leading-[1.12] tracking-tight text-white sm:mt-6 sm:text-4xl sm:leading-[1.08] lg:text-5xl",
 							children: [
-								"Tu dinero,",
+								"Bienestar para tu equipo,",
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 									className: "text-gradient-soft",
-									children: "a tu ritmo."
+									children: "control para tu empresa."
 								})
 							]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "mt-4 max-w-lg text-sm leading-relaxed text-white/80 sm:text-base",
-							children: "Ofrece a tus empleados acceso al salario que ya ganaron, con la flexibilidad de pagarlo hasta en 3 cuotas. La empresa no paga nada."
+							children: "Automatiza, gestiona y registra las solicitudes de adelanto de nómina de tus colaboradores. Una plataforma diseñada para integrarse a tu flujo operativo actual de forma fluida, elegante y segura."
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "mt-8 space-y-4 sm:space-y-5",
@@ -813,15 +852,23 @@ function Hero() {
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(GlassButtonPrimary, {
-								href: REGISTER_URL,
-								className: "w-full justify-center gap-2 sm:w-auto",
-								children: ["Regístrate gratis", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "h-4 w-4" })]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GlassButtonSecondary, {
-								href: LOGIN_URL,
-								className: "w-full justify-center gap-2 sm:w-auto",
-								children: "Inicia sesión"
-							})]
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(GlassButtonPrimary, {
+									href: REGISTER_URL,
+									className: "w-full justify-center gap-2 sm:w-auto",
+									children: ["Regístrate gratis", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowRight, { className: "h-4 w-4" })]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GlassButtonEmployeeAccess, {
+									href: REGISTER_URL,
+									className: "w-full gap-2 sm:w-auto",
+									children: "Activar Acceso Empleado"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GlassButtonSecondary, {
+									href: LOGIN_URL,
+									className: "w-full justify-center gap-2 sm:w-auto",
+									children: "Inicia sesión"
+								})
+							]
 						})
 					]
 				}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Reveal, {
@@ -842,60 +889,54 @@ function TrustOrb() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]",
 		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute -inset-6 -z-10 rounded-[3rem] bg-white/40 opacity-70 blur-3xl sm:-inset-10" }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute -inset-6 -z-10 rounded-[3rem] opacity-40 blur-3xl sm:-inset-10",
-				style: { background: "var(--gradient-orb)" }
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute inset-0 -z-10 opacity-[0.18]",
+				className: "absolute inset-0 -z-10 opacity-[0.35]",
 				style: {
-					backgroundImage: "radial-gradient(oklch(0.52 0.24 268 / 0.5) 1px, transparent 1px)",
+					backgroundImage: "radial-gradient(oklch(0.52 0.24 268 / 0.18) 1px, transparent 1px)",
 					backgroundSize: "22px 22px"
 				}
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-md sm:top-6",
+				className: "absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border border-white/60 bg-white/70 shadow-lg backdrop-blur-md sm:top-6",
 				style: { transform: "translate(-46%, 0) rotate(-5deg)" }
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl p-5 text-primary-foreground shadow-[var(--shadow-orb)] animate-float-slow sm:rounded-3xl sm:p-8",
-				style: { background: "var(--gradient-orb)" },
+				className: "relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl border border-foreground/8 bg-white p-5 text-foreground shadow-[0_20px_50px_rgba(15,23,42,0.12)] animate-float-slow sm:rounded-3xl sm:p-8",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-white/15" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-white/10" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full border border-white/10" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-primary/12" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full border border-primary/8" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full border border-primary/8" }),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "flex items-center justify-between",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex items-center gap-2.5",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-								className: "flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md",
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "text-sm font-bold",
-									children: "A"
-								})
+								className: "flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm",
+								style: { background: "var(--gradient-brand)" },
+								children: "A"
 							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-sm font-semibold tracking-tight opacity-95",
+								className: "text-sm font-semibold tracking-tight text-foreground",
 								children: "AdeCerebiia"
 							})]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-medium backdrop-blur-md",
+							className: "flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-[10px] font-medium text-foreground/75",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "relative flex h-1.5 w-1.5",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "relative inline-flex h-1.5 w-1.5 rounded-full bg-white" })]
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" })]
 							}), "En línea"]
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "relative mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring" }),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "absolute h-full w-full rounded-full bg-white/10 animate-pulse-ring",
+								className: "absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring",
 								style: { animationDelay: "1.2s" }
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.2)] ring-4 ring-white/30 sm:h-28 sm:w-28",
+								className: "relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.14)] ring-4 ring-primary/15 sm:h-28 sm:w-28",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
 									className: "h-9 w-9 text-accent sm:h-11 sm:w-11",
 									strokeWidth: 2.25
@@ -912,10 +953,10 @@ function TrustOrb() {
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "mt-6 text-center sm:mt-10",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "text-[10px] font-medium uppercase tracking-[0.2em] opacity-70 sm:text-[11px]",
+							className: "text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/50 sm:text-[11px]",
 							children: "Confianza · Bienestar"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-2 text-xl font-bold leading-tight sm:text-2xl",
+							className: "mt-2 text-xl font-bold leading-tight text-foreground sm:text-2xl",
 							children: [
 								"Adelantos seguros",
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
@@ -924,7 +965,7 @@ function TrustOrb() {
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "mt-6 grid grid-cols-3 gap-1.5 border-t border-white/20 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5",
+						className: "mt-6 grid grid-cols-3 gap-1.5 border-t border-foreground/8 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustStat, {
 								label: "Cuotas",
@@ -973,10 +1014,10 @@ function TrustOrb() {
 }
 function TrustStat({ label, value }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "text-[10px] uppercase tracking-wider opacity-70",
+		className: "text-[10px] uppercase tracking-wider text-foreground/50",
 		children: label
 	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "mt-1 text-sm font-bold",
+		className: "mt-1 text-sm font-bold text-foreground",
 		children: value
 	})] });
 }

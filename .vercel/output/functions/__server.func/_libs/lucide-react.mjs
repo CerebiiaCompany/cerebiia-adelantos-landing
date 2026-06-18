@@ -249,16 +249,6 @@ var CalendarDays = createLucideIcon("calendar-days", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var ChevronDown = createLucideIcon("chevron-down", [["path", {
-	d: "m6 9 6 6 6-6",
-	key: "qrunsl"
-}]]);
-/**
-* @license lucide-react v0.575.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var CircleCheck = createLucideIcon("circle-check", [["circle", {
 	cx: "12",
 	cy: "12",
@@ -457,4 +447,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ArrowRight as _, Smartphone as a, Medal as c, CircleCheck as d, ChevronDown as f, Banknote as g, Bolt as h, TrendingUp as i, House as l, Building2 as m, Workflow as n, ShieldCheck as o, CalendarDays as p, Users as r, Menu as s, X as t, HeartHandshake as u };
+export { Smartphone as a, Medal as c, CircleCheck as d, CalendarDays as f, ArrowRight as g, Banknote as h, TrendingUp as i, House as l, Bolt as m, Workflow as n, ShieldCheck as o, Building2 as p, Users as r, Menu as s, X as t, HeartHandshake as u };
