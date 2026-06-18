@@ -1172,7 +1172,7 @@ function CountUpMetric({
   return (
     <span
       ref={ref}
-      className="tabular-nums text-gradient-metric"
+      className="tabular-nums text-white"
     >
       {display}
     </span>
@@ -1314,11 +1314,11 @@ function CuotasTimelineCard({ label, desc }: { label: string; desc: string }) {
   return (
     <GlassCard
       as="article"
-      className="w-full p-5 text-left sm:p-6"
+      className="flex h-full w-full flex-col p-5 text-left sm:p-6"
       hover
     >
       <div className="text-center text-lg font-semibold text-white sm:text-left">{label}</div>
-      <div className="mt-1 text-left text-sm leading-relaxed text-white/70">{desc}</div>
+      <div className="mt-1 flex-1 text-left text-sm leading-relaxed text-white/70">{desc}</div>
     </GlassCard>
   );
 }
@@ -1345,14 +1345,14 @@ function CuotasTimeline() {
           </div>
         </div>
 
-        <div className="relative z-10 grid grid-cols-3 gap-4">
+        <div className="relative z-10 grid grid-cols-3 items-stretch gap-4">
           {CUOTAS_STEPS.map((step, i) => (
             <div
               key={step.n}
-              className="cuotas-timeline-step group/step flex flex-col items-center"
+              className="cuotas-timeline-step group/step flex h-full flex-col items-center"
             >
               <CuotasTimelineFigure n={step.n} />
-              <div className="mt-4 w-full">
+              <div className="mt-4 flex w-full flex-1 flex-col">
                 <CuotasTimelineCard label={step.label} desc={step.desc} />
               </div>
             </div>
@@ -1445,7 +1445,7 @@ function HowStepFigure({ n, light = false }: { n: string; light?: boolean }) {
 
 function HowWorksStepCard({ title, desc, light = false }: { title: string; desc: string; light?: boolean }) {
   return (
-    <GlassCard as="article" light={light} className="group/step h-full p-5 text-left sm:p-6" hover>
+    <GlassCard as="article" light={light} className="group/step flex h-full w-full flex-col p-5 text-left sm:p-6" hover>
       <h3 className={`text-left text-base font-semibold sm:text-lg ${light ? "text-foreground" : "text-white"}`}>{title}</h3>
       <p className={`mt-2 flex-1 text-left text-sm leading-relaxed ${light ? "text-foreground/70" : "text-white/70"}`}>{desc}</p>
       <div
@@ -1480,15 +1480,15 @@ function HowWorksTimeline({ active, light = false }: { active: boolean; light?: 
           ))}
         </div>
 
-        <div className="relative z-10 grid grid-cols-4 gap-5">
+        <div className="relative z-10 grid grid-cols-4 items-stretch gap-5">
           {HOW_IT_WORKS_STEPS.map((step, i) => (
             <div
               key={`lg-${step.n}`}
-              className="how-works-step group/step flex flex-col items-center"
+              className="how-works-step group/step flex h-full flex-col items-center"
             >
               <HowStepFigure n={step.n} light={light} />
               <div
-                className={`how-step-card-fall mt-4 w-full ${active ? "is-active" : ""}`}
+                className={`how-step-card-fall mt-4 flex w-full flex-1 flex-col ${active ? "is-active" : ""}`}
                 style={{ transitionDelay: active ? `${220 + i * 160}ms` : "0ms" }}
               >
                 <HowWorksStepCard title={step.title} desc={step.desc} light={light} />
@@ -1499,17 +1499,17 @@ function HowWorksTimeline({ active, light = false }: { active: boolean; light?: 
       </div>
 
       {/* Tablet / mobile */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:hidden">
+      <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:hidden">
         {HOW_IT_WORKS_STEPS.map((step, i) => (
           <div
             key={`sm-${step.n}`}
-            className="how-works-step group/step flex flex-col"
+            className="how-works-step group/step flex h-full flex-col"
           >
             <div className="mb-4 flex justify-center sm:justify-start">
               <HowStepFigure n={step.n} light={light} />
             </div>
             <div
-              className={`how-step-card-fall ${active ? "is-active" : ""}`}
+              className={`how-step-card-fall flex flex-1 flex-col ${active ? "is-active" : ""}`}
               style={{ transitionDelay: active ? `${180 + i * 140}ms` : "0ms" }}
             >
               <HowWorksStepCard title={step.title} desc={step.desc} light={light} />
