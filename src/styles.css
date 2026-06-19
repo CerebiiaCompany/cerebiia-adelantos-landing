@@ -205,6 +205,62 @@
     box-shadow: 0 16px 48px hsl(220 40% 10% / 0.28);
   }
 
+  /* Impact metrics — compacto; descripción al hover (desktop) o tap (móvil) */
+  .impact-metric-card {
+    cursor: pointer;
+    min-height: 9.5rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .impact-metric-desc {
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition:
+      max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.3s ease,
+      margin-top 0.3s ease;
+  }
+
+  @media (hover: hover) {
+    .impact-metric-card:hover .impact-metric-desc {
+      max-height: 7rem;
+      margin-top: 0.75rem;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .impact-metric-card:hover {
+      min-height: 12.5rem;
+    }
+  }
+
+  @media (hover: none) {
+    .impact-metric-card.is-expanded .impact-metric-desc {
+      max-height: 7rem;
+      margin-top: 0.75rem;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .impact-metric-card.is-expanded {
+      min-height: 12.5rem;
+      border-color: hsl(0 0% 100% / 0.22);
+      background: hsl(0 0% 100% / 0.1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .impact-metric-desc {
+      max-height: none;
+      margin-top: 0.75rem;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
   .glass-chip {
     border-radius: 1rem;
     border: 1px solid hsl(0 0% 100% / 0.12);
@@ -225,6 +281,15 @@
 
   .section-shell {
     padding-block: 3.5rem;
+  }
+
+  #inicio,
+  #producto,
+  #cuotas,
+  #como-funciona,
+  #empresas,
+  #contacto {
+    scroll-margin-top: 5rem;
   }
 
   @media (min-width: 640px) {
@@ -294,6 +359,15 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  .hero-title-accent {
+    color: hsl(265 72% 88%);
+    text-shadow: 0 0 28px hsl(265 70% 75% / 0.35);
+  }
+
+  .hero-highlight-icon {
+    filter: drop-shadow(0 0 10px hsl(265 70% 75% / 0.32));
   }
 
   .text-gradient-metric {
@@ -493,6 +567,74 @@
     border-color: hsl(262 48% 78% / 0.55);
     background: hsl(262 58% 97%);
     box-shadow: 0 14px 44px hsl(262 45% 55% / 0.14);
+  }
+
+  /* Feature cards — glassmorphism avanzado sobre sección clara */
+  .feature-glass-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid hsl(0 0% 100% / 0.35);
+    border-top: 1px solid hsl(0 0% 100% / 0.55);
+    border-left: 1px solid hsl(0 0% 100% / 0.45);
+    background: hsl(0 0% 100% / 0.12);
+    box-shadow:
+      0 20px 25px -5px hsl(220 60% 15% / 0.12),
+      0 8px 10px -6px hsl(220 60% 15% / 0.08);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .feature-glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      hsl(0 0% 100% / 0.22) 0%,
+      hsl(0 0% 100% / 0.04) 45%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  .feature-glass-card:hover {
+    transform: translateY(-4px);
+    border-color: hsl(217 91% 60%);
+    border-top-color: hsl(214 100% 72%);
+    border-left-color: hsl(217 91% 68%);
+    background: hsl(0 0% 100% / 0.22);
+    box-shadow:
+      0 25px 50px -12px hsl(220 60% 15% / 0.18),
+      0 0 0 1px hsl(217 91% 60% / 0.25),
+      0 0 24px hsl(217 91% 60% / 0.12);
+  }
+
+  .feature-glass-card-icon {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 0.75rem;
+    display: inline-flex;
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.35s ease;
+  }
+
+  .feature-glass-card:hover .feature-glass-card-icon {
+    transform: translateY(-2px) scale(1.05);
+    filter: drop-shadow(0 6px 12px hsl(260 70% 55% / 0.28));
+  }
+
+  .feature-glass-card-title {
+    position: relative;
+    z-index: 1;
+  }
+
+  .feature-glass-card-desc {
+    position: relative;
+    z-index: 1;
   }
 
   .benefit-card-icon {
@@ -835,7 +977,7 @@
   }
 
   .nav-inline-link .nav-inline-icon {
-    color: hsl(0 0% 100%);
+    transition: filter 0.3s ease, transform 0.3s ease;
   }
 
   .nav-inline-link::before {
@@ -889,8 +1031,7 @@
   }
 
   .nav-inline-link:hover .nav-inline-icon {
-    color: var(--color-orb-glow);
-    filter: var(--shadow-orb-icon);
+    filter: drop-shadow(0 0 6px hsl(265 80% 88% / 0.75));
   }
 
   .nav-inline-link:hover .nav-icon-anim-home {
@@ -927,14 +1068,11 @@
   }
 
   .nav-card-icon-svg {
-    transition:
-      color 0.3s ease,
-      filter 0.3s ease;
+    transition: filter 0.3s ease, transform 0.3s ease;
   }
 
   .nav-card-link:hover .nav-card-icon-svg {
-    color: var(--color-orb-glow);
-    filter: var(--shadow-orb-icon);
+    filter: drop-shadow(0 0 6px hsl(265 80% 88% / 0.75));
   }
 
   @keyframes nav-icon-hop {
@@ -1113,6 +1251,36 @@
   }
 
   /* Mobile sidebar — entrada escalonada + hovers */
+  .mobile-sheet-root {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-sheet-backdrop {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-sheet {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    isolation: isolate;
+  }
+
+  .mobile-sheet-close {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+  }
+
+  .mobile-sheet-close:hover {
+    border-color: hsl(0 0% 100% / 0.35);
+    background: hsl(0 0% 100% / 0.14);
+    box-shadow: var(--shadow-cta-white);
+  }
+
   @keyframes mobile-sheet-header-in {
     from {
       opacity: 0;
@@ -1144,36 +1312,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  .mobile-sheet > button.absolute {
-    display: inline-flex;
-    height: 2.25rem;
-    width: 2.25rem;
-    align-items: center;
-    justify-content: center;
-    border-radius: 9999px;
-    border: 1px solid hsl(0 0% 100% / 0.18);
-    background: hsl(0 0% 100% / 0.08);
-    opacity: 1;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition:
-      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 0.35s ease,
-      border-color 0.25s ease,
-      background-color 0.25s ease;
-  }
-
-  .mobile-sheet > button.absolute:hover {
-    border-color: hsl(0 0% 100% / 0.35);
-    background: hsl(0 0% 100% / 0.14);
-    box-shadow: var(--shadow-cta-white);
-    transform: rotate(90deg) scale(1.05);
-  }
-
-  .mobile-sheet > button.absolute:active {
-    transform: rotate(90deg) scale(0.95);
   }
 
   .mobile-sheet[data-state="open"] .mobile-sheet-header {
@@ -1250,8 +1388,7 @@
 
   .mobile-nav-card:hover .nav-card-icon-svg,
   .mobile-nav-card:active .nav-card-icon-svg {
-    color: var(--color-orb-glow);
-    filter: var(--shadow-orb-icon);
+    filter: drop-shadow(0 0 6px hsl(265 80% 88% / 0.75));
   }
 
   .mobile-nav-card:active {
@@ -1293,28 +1430,56 @@
     transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  .cuotas-timeline-segment-fill.is-active {
+    transform: scaleX(1);
+  }
+
   .cuotas-timeline-segment-fill-v {
     transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .cuotas-timeline-segment-fill-v.is-active {
+    transform: scaleY(1);
   }
 
   .cuotas-timeline-segment-2 .cuotas-timeline-segment-fill {
     transition-delay: 0.12s;
   }
 
-  .cuotas-timeline:hover .cuotas-timeline-segment-fill,
-  .cuotas-timeline:has(.cuotas-timeline-step:hover) .cuotas-timeline-segment-fill {
-    transform: scaleX(1);
+  .cuotas-step-card-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.98);
+    transition:
+      grid-template-rows 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.45s ease,
+      transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+    pointer-events: none;
   }
 
-  .cuotas-timeline:hover .cuotas-timeline-segment-fill-v,
-  .cuotas-timeline:has(.cuotas-timeline-step:hover) .cuotas-timeline-segment-fill-v {
-    transform: scaleY(1);
+  .cuotas-step-card-panel.is-expanded {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
   }
 
-  .cuotas-timeline:hover .cuotas-timeline-figure,
-  .cuotas-timeline:has(.cuotas-timeline-step:hover) .cuotas-timeline-figure {
+  .cuotas-step-card-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .cuotas-timeline-step.is-active .cuotas-timeline-figure,
+  .cuotas-timeline-figure.is-active {
     --tw-ring-color: hsl(0 0% 100% / 0.35);
-    box-shadow: 0 0 20px hsl(0 0% 100% / 0.35);
+    box-shadow: 0 0 22px hsl(0 0% 100% / 0.38);
+    transform: scale(1.06);
+  }
+
+  .cuotas-timeline-step:focus-visible .cuotas-timeline-figure {
+    --tw-ring-color: hsl(265 72% 88% / 0.55);
+    box-shadow: 0 0 0 3px hsl(265 72% 88% / 0.35);
   }
 
   .cuotas-timeline-figure::before {
@@ -1549,12 +1714,21 @@
     .nav-inline-link:hover .nav-icon-anim-building {
       animation: none;
     }
-    .cuotas-timeline-segment-fill {
+    .cuotas-timeline-segment-fill,
+    .cuotas-timeline-segment-fill.is-active {
       transform: scaleX(1);
       transition: none;
     }
-    .cuotas-timeline-segment-fill-v {
+    .cuotas-timeline-segment-fill-v,
+    .cuotas-timeline-segment-fill-v.is-active {
       transform: scaleY(1);
+      transition: none;
+    }
+    .cuotas-step-card-panel {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
       transition: none;
     }
     .cuotas-figure-shine,
@@ -1579,6 +1753,13 @@
     .glass-card-light-hover:hover {
       transform: none;
     }
+    .feature-glass-card:hover {
+      transform: none;
+    }
+    .feature-glass-card:hover .feature-glass-card-icon {
+      transform: none;
+      filter: none;
+    }
     .glass-card-hover:hover .benefit-card-icon-dark {
       animation: none;
     }
@@ -1591,9 +1772,6 @@
     }
     .mobile-nav-card:hover,
     .mobile-nav-card:active {
-      transform: none;
-    }
-    .mobile-sheet > button.absolute:hover {
       transform: none;
     }
     .nav-cards-panel {

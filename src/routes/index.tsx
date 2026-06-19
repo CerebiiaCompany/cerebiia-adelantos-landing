@@ -1,32 +1,36 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { createFileRoute } from '@tanstack/react-router'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { SectionIcon } from "@/components/ui/icon";
+import { cn } from "@/lib/utils";
 import {
-  Bolt,
   ShieldCheck,
   ArrowRight,
-  CheckCircle2,
-  Building2,
-  Smartphone,
-  CalendarDays,
-  TrendingUp,
-  Users,
-  HeartHandshake,
+  CircleCheckBig,
+  HeartPulse,
+  UserRoundMinus,
+  CircleDollarSign,
   Menu,
-  X,
-  House,
-  Medal,
-  Banknote,
-  Workflow,
-  Wallet,
+  ChevronLeft,
+  Home,
+  Gift,
+  Split,
+  Route as RouteIcon,
+  BriefcaseBusiness,
+  Rocket,
+  CalendarRange,
+  UserRoundCheck,
+  PiggyBank,
+  TabletSmartphone,
+  CalendarClock,
+  ClipboardList,
+  FileSpreadsheet,
+  Activity,
+  Landmark,
+  BadgeDollarSign,
+  UserRoundPlus,
   type LucideIcon,
-} from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/components/icons";
 
 const WHATSAPP_NUMBER = "573169393922";
 const WHATSAPP_MESSAGE = encodeURIComponent(
@@ -37,14 +41,12 @@ const LOGIN_URL = "https://adelantos.cerebiia.com.co/login";
 const REGISTER_URL = "https://adelantos.cerebiia.com.co/registro";
 
 const NAV_LINKS = [
-  { href: "#inicio", label: "Inicio", icon: House },
-  { href: "#producto", label: "Beneficios", icon: Medal },
-  { href: "#cuotas", label: "Pagos a cuotas", icon: Banknote },
-  { href: "#como-funciona", label: "Cómo funciona", icon: Workflow },
-  { href: "#empresas", label: "Para empresas", icon: Building2 },
+  { href: "#inicio", label: "Inicio", icon: Home },
+  { href: "#producto", label: "Beneficios", icon: Gift },
+  { href: "#cuotas", label: "Pagos a cuotas", icon: Split },
+  { href: "#como-funciona", label: "Cómo funciona", icon: RouteIcon },
+  { href: "#empresas", label: "Para empresas", icon: BriefcaseBusiness },
 ] as const;
-
-const NAV_HEADER_OFFSET = 72;
 
 function navigateToHash(href: string) {
   if (!href.startsWith("#")) return;
@@ -52,25 +54,8 @@ function navigateToHash(href: string) {
   const target = document.getElementById(id);
   if (!target) return;
 
-  const top =
-    target.getBoundingClientRect().top + window.scrollY - NAV_HEADER_OFFSET;
-
-  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
   window.history.pushState(null, "", href);
-}
-
-function handleMobileNavClick(
-  href: string,
-  closeMenu: () => void,
-  event?: MouseEvent<HTMLAnchorElement>,
-) {
-  if (href.startsWith("#")) {
-    event?.preventDefault();
-    closeMenu();
-    window.setTimeout(() => navigateToHash(href), 300);
-    return;
-  }
-  closeMenu();
 }
 
 const NAV_ICON_HOVER_ANIM: Record<(typeof NAV_LINKS)[number]["href"], string> = {
@@ -81,58 +66,13 @@ const NAV_ICON_HOVER_ANIM: Record<(typeof NAV_LINKS)[number]["href"], string> = 
   "#empresas": "nav-icon-anim-building",
 };
 
-const ICON_SIZES = {
-  nav: { wrap: "h-6 w-6 rounded-md", icon: "h-3 w-3" },
-  xs: { wrap: "h-7 w-7 rounded-lg", icon: "h-3.5 w-3.5" },
-  sm: { wrap: "h-9 w-9 rounded-xl", icon: "h-4 w-4" },
-  md: { wrap: "h-12 w-12 rounded-xl", icon: "h-5 w-5" },
-  lg: { wrap: "h-14 w-14 rounded-2xl", icon: "h-7 w-7" },
-} as const;
-
-function BrandIcon({
-  icon: Icon,
-  size = "md",
-  variant = "gradient",
-  className = "",
-}: {
-  icon: LucideIcon;
-  size?: keyof typeof ICON_SIZES;
-  variant?: "gradient" | "glass" | "soft" | "orb";
-  className?: string;
-}) {
-  const s = ICON_SIZES[size];
-  const variantClass =
-    variant === "glass"
-      ? "bg-white text-primary shadow-[0_8px_24px_rgba(15,23,42,0.12)] ring-1 ring-white"
-      : variant === "soft"
-        ? "bg-primary/12 text-primary ring-1 ring-primary/25 shadow-[var(--shadow-brand)]"
-        : variant === "orb"
-          ? "text-primary-foreground shadow-[var(--shadow-orb)]"
-          : "text-primary-foreground shadow-[var(--shadow-brand)]";
-
-  const gradientStyle =
-    variant === "gradient"
-      ? { background: "var(--gradient-brand)" }
-      : variant === "orb"
-        ? { background: "var(--gradient-orb)" }
-        : undefined;
-
+function BenefitCardIcon({ icon, light = false }: { icon: LucideIcon; light?: boolean }) {
   return (
-    <div
-      className={`flex shrink-0 items-center justify-center transition-transform duration-300 ${s.wrap} ${variantClass} ${className}`}
-      style={gradientStyle}
-    >
-      <Icon className={s.icon} strokeWidth={2.25} aria-hidden />
-    </div>
-  );
-}
-
-function BenefitCardIcon({ icon: Icon, light = false }: { icon: LucideIcon; light?: boolean }) {
-  return (
-    <Icon
-      className={`benefit-card-icon ${light ? "benefit-card-icon-light" : "benefit-card-icon-dark"} mb-4 block h-7 w-7 sm:h-8 sm:w-8`}
-      strokeWidth={2.25}
-      aria-hidden
+    <SectionIcon
+      icon={icon}
+      size="lg"
+      surface={light ? "light" : "dark"}
+      className="benefit-card-icon mb-4"
     />
   );
 }
@@ -209,22 +149,6 @@ function GlassButtonPrimary({
   );
 }
 
-function GlassButtonSecondary({
-  href,
-  children,
-  className = "",
-}: {
-  href: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <a href={href} className={`btn-glass-secondary nav-btn-lift ${className}`}>
-      {children}
-    </a>
-  );
-}
-
 function GlassButtonEmployeeAccess({
   href,
   children,
@@ -244,18 +168,12 @@ function GlassButtonEmployeeAccess({
 
 function CheckIcon({ light = false }: { light?: boolean }) {
   return (
-    <div
-      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-        light
-          ? "bg-white/10 ring-1 ring-white/25 backdrop-blur-sm"
-          : "bg-white/10 ring-1 ring-white/20 backdrop-blur-sm"
-      }`}
-    >
-      <CheckCircle2
-        className={`h-4 w-4 ${light ? "text-cyan-200" : "text-cyan-200"}`}
-        strokeWidth={2.25}
-      />
-    </div>
+    <SectionIcon
+      icon={CircleCheckBig}
+      size="sm"
+      surface={light ? "dark" : "dark"}
+      className="mt-0.5 shrink-0"
+    />
   );
 }
 
@@ -423,13 +341,27 @@ function LightSectionDecorations() {
 }
 
 function Index() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileOpen(false);
+  }, []);
+
+  const openMobileMenu = useCallback(() => {
+    setMobileOpen(true);
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-landing text-white antialiased">
       <div className="relative min-h-screen">
         <LandingDecorations />
 
         <div className="relative z-[1]">
-        <Nav />
+        <Nav
+          mobileOpen={mobileOpen}
+          onOpenMobile={openMobileMenu}
+        />
+        <MobileNavMenu open={mobileOpen} onClose={closeMobileMenu} />
         <Hero />
         <ImpactMetrics />
         <CorporateBenefits />
@@ -562,7 +494,7 @@ function Logo({ inverted = false }: { inverted?: boolean }) {
 function NavInlineLink({
   href,
   label,
-  icon: Icon,
+  icon,
   onClick,
   index = 0,
 }: {
@@ -584,11 +516,7 @@ function NavInlineLink({
       className="nav-inline-link nav-item-enter group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white transition-all duration-300 xl:px-3.5"
     >
       <span className={`nav-card-icon inline-flex ${iconAnim}`}>
-        <Icon
-          className="nav-inline-icon h-4 w-4 text-white transition-all duration-300"
-          strokeWidth={2.25}
-          aria-hidden
-        />
+        <SectionIcon icon={icon} size="xs" surface="dark" className="nav-inline-icon" />
       </span>
       <span className="relative whitespace-nowrap">{label}</span>
     </a>
@@ -598,7 +526,7 @@ function NavInlineLink({
 function NavCardLink({
   href,
   label,
-  icon: Icon,
+  icon,
   onClick,
   index = 0,
   className = "",
@@ -624,11 +552,7 @@ function NavCardLink({
       className={`nav-card-link ${mobile ? "" : "nav-item-enter"} group flex w-full min-w-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/5 px-1.5 py-2 text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:border-white/20 hover:bg-white/10 ${mobile ? "mobile-nav-card mobile-nav-item" : ""} ${className}`}
     >
       <span className={`nav-card-icon inline-flex ${iconAnim}`}>
-        <Icon
-          className="nav-card-icon-svg h-5 w-5 text-white/80 transition-all duration-300 sm:h-[22px] sm:w-[22px]"
-          strokeWidth={2.25}
-          aria-hidden
-        />
+        <SectionIcon icon={icon} size="sm" surface="dark" className="nav-card-icon-svg" />
       </span>
       <span className="mt-1.5 max-w-full text-center text-[10px] font-medium leading-tight text-white/80 transition-colors duration-300 group-hover:text-white sm:text-[11px]">
         {label}
@@ -637,7 +561,7 @@ function NavCardLink({
   );
 }
 
-function NavAuthButtons({
+function NavLoginLink({
   className = "",
   stacked = false,
   onNavigate,
@@ -649,17 +573,13 @@ function NavAuthButtons({
   const visibility = stacked ? "inline-flex" : "hidden lg:inline-flex";
 
   return (
-    <div
-      className={`flex items-center gap-3 ${stacked ? "w-full flex-col" : ""} ${className}`}
+    <a
+      href={LOGIN_URL}
+      onClick={onNavigate}
+      className={`nav-link-ingresar ${visibility} items-center text-xs font-medium sm:text-sm ${stacked ? "mobile-sheet-footer-item mobile-sheet-login w-full justify-center py-2.5" : "px-1"} ${className}`}
     >
-      <a
-        href={LOGIN_URL}
-        onClick={onNavigate}
-        className={`nav-link-ingresar ${visibility} mobile-sheet-footer-item mobile-sheet-login items-center text-xs font-medium sm:text-sm ${stacked ? "w-full justify-center py-2.5" : "px-1"}`}
-      >
-        Ingresar
-      </a>
-    </div>
+      Ingresar
+    </a>
   );
 }
 
@@ -688,12 +608,131 @@ function NavCta({
   );
 }
 
-function Nav() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+function MobileNavMenu({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const pendingHashRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open || !pendingHashRef.current) return;
+
+    const hash = pendingHashRef.current;
+    pendingHashRef.current = null;
+    const timer = window.setTimeout(() => navigateToHash(hash), 280);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+
+  const handleNavClick = useCallback(
+    (href: string, event?: MouseEvent<HTMLAnchorElement>) => {
+      if (href.startsWith("#")) {
+        event?.preventDefault();
+        pendingHashRef.current = href;
+        onClose();
+        return;
+      }
+      onClose();
+    },
+    [onClose],
+  );
+
+  if (!mounted || !open) return null;
+
+  return createPortal(
+    <div className="mobile-sheet-root fixed inset-0 z-[9999] lg:hidden" aria-hidden={!open}>
+      <div
+        className="mobile-sheet-backdrop fixed inset-0 z-0 bg-black/80"
+        aria-hidden
+        onClick={onClose}
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menú de navegación"
+        data-state="open"
+        className="mobile-sheet pointer-events-auto fixed inset-y-0 right-0 z-20 flex h-dvh w-[min(100vw,22rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 border-l border-white/15 bg-white/8 text-white shadow-[-8px_0_40px_rgba(15,23,42,0.35)] backdrop-blur-2xl"
+      >
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,hsl(265_55%_55%_/_0.18),transparent_55%)]"
+          aria-hidden
+        />
+
+        <div className="mobile-sheet-header relative z-30 flex items-center justify-between gap-3 border-b border-white/15 px-4 py-4 sm:px-6 sm:py-5">
+          <Logo inverted />
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onClose();
+            }}
+            className="mobile-sheet-close relative z-30 inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:border-white/35 hover:bg-white/20 active:scale-95"
+            aria-label="Cerrar menú"
+          >
+            <ChevronLeft className="h-5 w-5 pointer-events-none" strokeWidth={2.25} aria-hidden />
+          </button>
+        </div>
+
+        <nav
+          className="mobile-sheet-nav relative z-20 grid grid-cols-2 gap-3 p-4 sm:grid-cols-2"
+          aria-label="Menú móvil"
+        >
+          {NAV_LINKS.map((link, i) => (
+            <NavCardLink
+              key={link.href}
+              {...link}
+              index={i}
+              mobile
+              className="min-w-0 w-full py-3.5"
+              onClick={(event) => handleNavClick(link.href, event)}
+            />
+          ))}
+        </nav>
+
+        <div className="mobile-sheet-footer relative z-20 mt-auto space-y-3 border-t border-white/15 p-4">
+          <NavLoginLink stacked onNavigate={onClose} />
+          <NavCta stacked className="justify-center" onNavigate={onClose} />
+        </div>
+      </aside>
+    </div>,
+    document.body,
+  );
+}
+
+function Nav({
+  mobileOpen,
+  onOpenMobile,
+}: {
+  mobileOpen: boolean;
+  onOpenMobile: () => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
   const lastScrollY = useRef(0);
-  const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
 
   useEffect(() => {
     const SCROLL_THRESHOLD = 10;
@@ -765,59 +804,18 @@ function Nav() {
             className="nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5 lg:ml-0"
             style={{ animationDelay: "350ms" }}
           >
-            <NavAuthButtons />
+            <NavLoginLink />
             <NavCta />
 
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  aria-expanded={mobileOpen}
-                  className="nav-menu-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:bg-white/20 lg:hidden sm:h-10 sm:w-10"
-                  aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
-                >
-                  {mobileOpen ? (
-                    <X className="nav-menu-icon h-5 w-5" />
-                  ) : (
-                    <Menu className="nav-menu-icon h-5 w-5" />
-                  )}
-                </button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="mobile-sheet flex w-[min(100vw,22rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 border-l border-white/15 bg-white/8 p-0 text-white shadow-[-8px_0_40px_rgba(15,23,42,0.35)] backdrop-blur-2xl"
-              >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,hsl(265_55%_55%_/_0.18),transparent_55%)]" aria-hidden />
-
-                <SheetHeader className="mobile-sheet-header relative border-b border-white/15 px-4 py-4 text-left sm:px-6 sm:py-5">
-                  <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-                  <Logo inverted />
-                </SheetHeader>
-
-                <nav
-                  className="mobile-sheet-nav relative grid grid-cols-2 gap-3 p-4 sm:grid-cols-2"
-                  aria-label="Menú móvil"
-                >
-                  {NAV_LINKS.map((link, i) => (
-                    <NavCardLink
-                      key={link.href}
-                      {...link}
-                      index={i}
-                      mobile
-                      className="min-w-0 w-full py-3.5"
-                      onClick={(event) =>
-                        handleMobileNavClick(link.href, closeMobileMenu, event)
-                      }
-                    />
-                  ))}
-                </nav>
-
-                <div className="mobile-sheet-footer relative mt-auto space-y-3 border-t border-white/15 p-4">
-                  <NavAuthButtons stacked onNavigate={closeMobileMenu} />
-                  <NavCta stacked className="justify-center" onNavigate={closeMobileMenu} />
-                </div>
-              </SheetContent>
-            </Sheet>
+            <button
+              type="button"
+              aria-expanded={mobileOpen}
+              onClick={onOpenMobile}
+              className="nav-menu-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:bg-white/20 lg:hidden sm:h-10 sm:w-10"
+              aria-label="Abrir menú"
+            >
+              <Menu className="nav-menu-icon h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -828,24 +826,24 @@ function Nav() {
 /* ---------- Hero ---------- */
 const HERO_HIGHLIGHTS = [
   {
-    icon: CalendarDays,
+    icon: CalendarClock,
     title: "Control Operativo Total",
     desc: "Define ventanas de tiempo personalizadas. Las solicitudes se desactivan automáticamente antes del cierre de nómina para garantizar un proceso contable limpio.",
   },
   {
-    icon: Workflow,
+    icon: ClipboardList,
     title: "Cero Carga Administrativa",
     desc: "Transforma las solicitudes manuales en un registro digital centralizado, ordenado y auditable.",
   },
   {
-    icon: TrendingUp,
+    icon: FileSpreadsheet,
     title: "Conciliación sin Errores",
     desc: "Exporta reportes consolidados listos para aplicar a tu software de nómina tradicional al finalizar el periodo permitido.",
   },
 ] as const;
 
 function HeroHighlight({
-  icon: Icon,
+  icon,
   title,
   desc,
 }: {
@@ -855,11 +853,7 @@ function HeroHighlight({
 }) {
   return (
     <GlassCard className="flex items-start gap-3.5 p-4 sm:gap-4 sm:p-5" hover>
-      <Icon
-        className="mt-0.5 h-5 w-5 shrink-0 text-white sm:h-6 sm:w-6"
-        strokeWidth={2.25}
-        aria-hidden
-      />
+      <SectionIcon icon={icon} size="md" surface="accent" className="hero-highlight-icon mt-0.5 shrink-0" />
       <div className="min-w-0 pt-0.5 text-left">
         <div className="text-sm font-semibold text-white sm:text-base">{title}</div>
         <div className="mt-0.5 text-left text-xs leading-relaxed text-white/70 sm:text-sm">{desc}</div>
@@ -884,7 +878,8 @@ function Hero() {
               <h1 className="mt-5 text-[1.75rem] font-bold leading-[1.12] tracking-tight text-white sm:mt-6 sm:text-4xl sm:leading-[1.08] lg:text-5xl">
                 Bienestar para tu equipo,
                 <br />
-                <span className="text-gradient-soft">control para tu empresa.</span>
+                control{" "}
+                <span className="hero-title-accent">para tu empresa.</span>
               </h1>
               <p className="mt-4 max-w-lg text-left text-sm leading-relaxed text-white/80 sm:text-base">
                 Automatiza, gestiona y registra las solicitudes de adelanto de nómina de tus
@@ -910,14 +905,9 @@ function Hero() {
                   href={REGISTER_URL}
                   className="w-full gap-2 sm:w-auto"
                 >
+                  <UserRoundPlus className="h-4 w-4 shrink-0" aria-hidden />
                   Activar Acceso Empleado
                 </GlassButtonEmployeeAccess>
-                <GlassButtonSecondary
-                  href={LOGIN_URL}
-                  className="w-full justify-center gap-2 sm:w-auto"
-                >
-                  Inicia sesión
-                </GlassButtonSecondary>
               </div>
             </div>
           </Reveal>
@@ -976,9 +966,9 @@ function TrustOrb() {
             style={{ animationDelay: "1.2s" }}
           />
           <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)] ring-4 ring-primary/12 sm:h-28 sm:w-28">
-            <ShieldCheck className="h-9 w-9 text-accent sm:h-11 sm:w-11" strokeWidth={2.25} />
-            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-accent shadow-lg ring-2 ring-accent/20 sm:h-9 sm:w-9">
-              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+            <SectionIcon icon={ShieldCheck} size="xl" surface="light" />
+            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg ring-2 ring-accent/20 sm:h-9 sm:w-9">
+              <SectionIcon icon={CircleCheckBig} size="xs" surface="light" />
             </span>
           </div>
         </div>
@@ -1002,19 +992,19 @@ function TrustOrb() {
       </div>
 
       <div className="absolute -left-12 top-16 hidden animate-float sm:block lg:-left-16 lg:top-20">
-        <FloatingChip icon={HeartHandshake} title="Sin riesgo" sub="Para tu empresa" />
+        <FloatingChip icon={ShieldCheck} title="Sin riesgo" sub="Para tu empresa" />
       </div>
       <div
         className="absolute -right-12 bottom-32 hidden animate-float-slow sm:block lg:-right-16 lg:bottom-36"
         style={{ animationDelay: "0.6s" }}
       >
-        <FloatingChip icon={CalendarDays} title="Hasta 3 cuotas" sub="Flexibilidad de pago" />
+        <FloatingChip icon={Split} title="Hasta 3 cuotas" sub="Flexibilidad de pago" />
       </div>
       <div
         className="absolute -left-10 bottom-6 hidden animate-float-slow sm:block lg:-left-14 lg:bottom-8"
         style={{ animationDelay: "1.1s" }}
       >
-        <FloatingChip icon={Banknote} title="Tarifa fija" sub="$8.000 por adelanto" />
+        <FloatingChip icon={BadgeDollarSign} title="Tarifa fija" sub="$8.000 por adelanto" />
       </div>
     </div>
   );
@@ -1047,7 +1037,7 @@ function FloatingChip({
       className={`floating-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`}
       style={style}
     >
-      <BrandIcon icon={icon} size="sm" variant="gradient" />
+      <SectionIcon icon={icon} size="sm" surface="light" className="shrink-0" />
       <div className="min-w-0 pr-1 text-left">
         <div className="text-xs font-semibold leading-tight text-foreground sm:text-sm">{title}</div>
         <div className="text-left text-[10px] text-foreground/60 sm:text-[11px]">{sub}</div>
@@ -1059,6 +1049,7 @@ function FloatingChip({
 /* ---------- Impact Metrics ---------- */
 const IMPACT_METRICS = [
   {
+    icon: HeartPulse,
     target: 70,
     prefix: "",
     suffix: "%",
@@ -1067,6 +1058,7 @@ const IMPACT_METRICS = [
       "De los trabajadores sufre de ansiedad por su flujo de caja. Reduce esta carga ofreciendo liquidez sobre el salario ya devengado.",
   },
   {
+    icon: UserRoundMinus,
     target: -16,
     prefix: "",
     suffix: "%",
@@ -1075,6 +1067,7 @@ const IMPACT_METRICS = [
       "Disminución promedio en la deserción laboral al implementar programas modernos de bienestar financiero e incentivos internos.",
   },
   {
+    icon: CircleDollarSign,
     target: 0,
     prefix: "$",
     suffix: "",
@@ -1179,24 +1172,70 @@ function CountUpMetric({
   );
 }
 
+function ImpactMetricCard({ metric }: { metric: ImpactMetric }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const toggleExpanded = useCallback(() => {
+    if (!window.matchMedia("(hover: none)").matches) return;
+    setExpanded((open) => !open);
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      toggleExpanded();
+    },
+    [toggleExpanded],
+  );
+
+  return (
+    <div
+      className="h-full"
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      aria-label={`${metric.label}. ${expanded ? "Ocultar detalle" : "Ver detalle"}`}
+      onClick={toggleExpanded}
+      onKeyDown={handleKeyDown}
+    >
+      <GlassCard
+        className={`impact-metric-card group p-5 sm:p-6 ${expanded ? "is-expanded" : ""}`}
+        hover
+      >
+        <div className="flex flex-col items-center text-center">
+          <SectionIcon
+            icon={metric.icon}
+            size="md"
+            surface="dark"
+            className="impact-metric-icon mb-3"
+          />
+
+          <div className="text-4xl font-extrabold leading-none sm:text-5xl">
+            <CountUpMetric metric={metric} />
+          </div>
+
+          <h3 className="mt-2.5 text-sm font-bold tracking-wide text-white sm:text-base">
+            {metric.label}
+          </h3>
+
+          <p className="impact-metric-desc text-left text-sm leading-relaxed text-white/65">
+            {metric.description}
+          </p>
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
+
 function ImpactMetrics() {
   return (
     <section className="section-shell">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
           {IMPACT_METRICS.map((metric, i) => (
             <Reveal key={metric.label} delay={i * 100}>
-              <GlassCard className="p-8 sm:p-10" hover>
-                <div className="text-center text-4xl font-extrabold sm:text-5xl">
-                  <CountUpMetric metric={metric} />
-                </div>
-                <p className="mt-3 text-center text-sm font-medium tracking-wide text-white/70">
-                  {metric.label}
-                </p>
-                <p className="mt-2 text-left text-sm leading-relaxed text-white/60">
-                  {metric.description}
-                </p>
-              </GlassCard>
+              <ImpactMetricCard metric={metric} />
             </Reveal>
           ))}
         </div>
@@ -1208,12 +1247,12 @@ function ImpactMetrics() {
 /* ---------- Corporate Benefits ---------- */
 const CORPORATE_BENEFITS = [
   {
-    icon: Users,
+    icon: UserRoundCheck,
     title: "Retención de talento clave",
     desc: "Fortalece la propuesta de valor para tus colaboradores con un beneficio financiero tangible que impacta directamente en la permanencia del equipo.",
   },
   {
-    icon: TrendingUp,
+    icon: Activity,
     title: "Mayor productividad operativa",
     desc: "Reduce el ausentismo y el estrés financiero del personal, mejorando el foco, la asistencia y el desempeño en operaciones críticas.",
   },
@@ -1252,15 +1291,40 @@ function CorporateBenefits() {
 }
 
 /* ---------- Features (beneficios) ---------- */
+const FEATURE_ITEMS = [
+  {
+    icon: Rocket,
+    title: "Solicitud en segundos",
+    desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten.",
+  },
+  {
+    icon: CalendarRange,
+    title: "Pagos hasta en 3 cuotas",
+    desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Cero riesgo para la empresa",
+    desc: "La empresa no paga nada. El empleado asume una tarifa fija de $8.000 por adelanto.",
+  },
+  {
+    icon: UserRoundCheck,
+    title: "Retención de talento",
+    desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo.",
+  },
+  {
+    icon: PiggyBank,
+    title: "Bienestar financiero",
+    desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses.",
+  },
+  {
+    icon: TabletSmartphone,
+    title: "100% digital",
+    desc: "Sin papeleos ni trámites. Tus empleados solicitan desde su móvil en cualquier momento.",
+  },
+] satisfies ReadonlyArray<{ icon: LucideIcon; title: string; desc: string }>;
+
 function Features() {
-  const items = [
-    { icon: Bolt, title: "Solicitud en segundos", desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten." },
-    { icon: CalendarDays, title: "Pagos hasta en 3 cuotas", desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado." },
-    { icon: ShieldCheck, title: "Cero riesgo para la empresa", desc: "La empresa no paga nada. El empleado asume una tarifa fija de $8.000 por adelanto." },
-    { icon: Users, title: "Retención de talento", desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo." },
-    { icon: TrendingUp, title: "Bienestar financiero", desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses." },
-    { icon: Smartphone, title: "100% digital", desc: "Sin papeleos ni trámites. Tus empleados solicitan desde su móvil en cualquier momento." },
-  ];
   return (
     <section id="producto" className="section-shell section-surface-light relative overflow-hidden">
       <LightSectionDecorations />
@@ -1274,13 +1338,15 @@ function Features() {
         </Reveal>
 
         <div className="mt-10 grid gap-5 sm:mt-14 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {items.map(({ icon: Icon, title, desc }, i) => (
+          {FEATURE_ITEMS.map(({ icon, title, desc }, i) => (
             <Reveal key={title} delay={i * 80}>
-              <GlassCard as="article" light className="feature-benefit-card h-full p-5 text-left sm:p-7" hover>
-                <BenefitCardIcon icon={Icon} light />
-                <h3 className="mt-1 text-left text-lg font-semibold text-foreground">{title}</h3>
-                <p className="mt-2 text-left text-sm leading-relaxed text-foreground/70">{desc}</p>
-              </GlassCard>
+              <article className="feature-glass-card h-full p-5 text-left sm:p-7">
+                <div className="feature-glass-card-icon">
+                  <SectionIcon icon={icon} size="lg" surface="light" />
+                </div>
+                <h3 className="feature-glass-card-title text-lg font-semibold text-foreground">{title}</h3>
+                <p className="feature-glass-card-desc mt-2 text-sm leading-relaxed text-foreground/70">{desc}</p>
+              </article>
             </Reveal>
           ))}
         </div>
@@ -1296,9 +1362,14 @@ const CUOTAS_STEPS = [
   { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el flujo de caja del colaborador." },
 ] as const;
 
-function CuotasTimelineFigure({ n }: { n: string }) {
+function CuotasTimelineFigure({ n, active = false }: { n: string; active?: boolean }) {
   return (
-    <div className="cuotas-timeline-figure relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-2xl font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-shadow duration-500">
+    <div
+      className={cn(
+        "cuotas-timeline-figure relative z-10 flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full text-2xl font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-[transform,box-shadow] duration-500",
+        active && "is-active",
+      )}
+    >
       <div
         className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full"
         style={{ background: "var(--gradient-orb)" }}
@@ -1312,20 +1383,90 @@ function CuotasTimelineFigure({ n }: { n: string }) {
 
 function CuotasTimelineCard({ label, desc }: { label: string; desc: string }) {
   return (
-    <GlassCard
-      as="article"
-      className="flex h-full w-full flex-col p-5 text-left sm:p-6"
-      hover
-    >
+    <GlassCard as="article" className="flex h-full w-full flex-col p-5 text-left sm:p-6" hover={false}>
       <div className="text-center text-lg font-semibold text-white sm:text-left">{label}</div>
       <div className="mt-1 flex-1 text-left text-sm leading-relaxed text-white/70">{desc}</div>
     </GlassCard>
   );
 }
 
-function CuotasTimeline() {
+function CuotasTimelineStep({
+  step,
+  index,
+  active,
+  onActivate,
+  orientation = "horizontal",
+  showConnector = false,
+  connectorActive = false,
+}: {
+  step: (typeof CUOTAS_STEPS)[number];
+  index: number;
+  active: boolean;
+  onActivate: () => void;
+  orientation?: "horizontal" | "vertical";
+  showConnector?: boolean;
+  connectorActive?: boolean;
+}) {
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onActivate();
+    }
+  };
+
   return (
-    <div className="cuotas-timeline group/timeline relative">
+    <div
+      className={cn(
+        "cuotas-timeline-step group/step flex flex-col items-center outline-none",
+        orientation === "horizontal" ? "h-full" : "w-full max-w-sm",
+        active && "is-active",
+      )}
+      role="button"
+      tabIndex={0}
+      aria-expanded={active}
+      aria-label={`${step.label}: ${step.desc}`}
+      onMouseEnter={onActivate}
+      onFocus={onActivate}
+      onClick={onActivate}
+      onKeyDown={handleKeyDown}
+    >
+      <CuotasTimelineFigure n={step.n} active={active} />
+      <div
+        className={cn(
+          "cuotas-step-card-panel mt-4 w-full",
+          orientation === "horizontal" && "flex flex-1 flex-col",
+          active && "is-expanded",
+        )}
+        style={{ transitionDelay: active ? `${index * 70}ms` : "0ms" }}
+      >
+        <div className="cuotas-step-card-inner">
+          <CuotasTimelineCard label={step.label} desc={step.desc} />
+        </div>
+      </div>
+      {showConnector && (
+        <div className="relative my-3 flex h-12 w-0.5 shrink-0" aria-hidden>
+          <div className="h-full w-full rounded-full bg-white/15" />
+          <div
+            className={cn(
+              "cuotas-timeline-segment-fill-v absolute inset-0 origin-top scale-y-0 rounded-full bg-gradient-to-b from-white/50 via-white to-white/50",
+              connectorActive && "is-active",
+            )}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CuotasTimeline() {
+  const [activeStep, setActiveStep] = useState(0);
+
+  return (
+    <div
+      className="cuotas-timeline group/timeline relative"
+      data-active-step={activeStep}
+      onMouseLeave={() => setActiveStep(0)}
+    >
       {/* Desktop: pasos en columna (figura + card) con línea en el centro de las figuras */}
       <div className="relative hidden sm:block">
         <div className="pointer-events-none absolute inset-x-0 top-7 z-0 h-0.5" aria-hidden>
@@ -1334,28 +1475,38 @@ function CuotasTimeline() {
             style={{ left: "16.666%", width: "33.333%" }}
           >
             <div className="h-full rounded-full bg-white/15" />
-            <div className="cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50" />
+            <div
+              className={cn(
+                "cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50",
+                activeStep >= 1 && "is-active",
+              )}
+            />
           </div>
           <div
             className="cuotas-timeline-segment cuotas-timeline-segment-2 absolute top-0 h-full"
             style={{ left: "50%", width: "33.333%" }}
           >
             <div className="h-full rounded-full bg-white/15" />
-            <div className="cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50" />
+            <div
+              className={cn(
+                "cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50",
+                activeStep >= 2 && "is-active",
+              )}
+              style={{ transitionDelay: activeStep >= 2 ? "0.12s" : "0ms" }}
+            />
           </div>
         </div>
 
-        <div className="relative z-10 grid grid-cols-3 items-stretch gap-4">
+        <div className="relative z-10 grid grid-cols-3 items-start gap-4">
           {CUOTAS_STEPS.map((step, i) => (
-            <div
+            <CuotasTimelineStep
               key={step.n}
-              className="cuotas-timeline-step group/step flex h-full flex-col items-center"
-            >
-              <CuotasTimelineFigure n={step.n} />
-              <div className="mt-4 flex w-full flex-1 flex-col">
-                <CuotasTimelineCard label={step.label} desc={step.desc} />
-              </div>
-            </div>
+              step={step}
+              index={i}
+              active={activeStep === i}
+              onActivate={() => setActiveStep(i)}
+              orientation="horizontal"
+            />
           ))}
         </div>
       </div>
@@ -1363,18 +1514,16 @@ function CuotasTimeline() {
       {/* Mobile: pasos verticales con conector entre centros de figura */}
       <div className="flex flex-col items-center sm:hidden">
         {CUOTAS_STEPS.map((step, i) => (
-          <div key={step.n} className="cuotas-timeline-step group/step flex w-full max-w-sm flex-col items-center">
-            <CuotasTimelineFigure n={step.n} />
-            <div className="mt-4 w-full">
-              <CuotasTimelineCard label={step.label} desc={step.desc} />
-            </div>
-            {i < CUOTAS_STEPS.length - 1 && (
-              <div className="relative my-3 flex h-12 w-0.5 shrink-0" aria-hidden>
-                <div className="h-full w-full rounded-full bg-white/15" />
-                <div className="cuotas-timeline-segment-fill-v absolute inset-0 origin-top scale-y-0 rounded-full bg-gradient-to-b from-white/50 via-white to-white/50" />
-              </div>
-            )}
-          </div>
+          <CuotasTimelineStep
+            key={step.n}
+            step={step}
+            index={i}
+            active={activeStep === i}
+            onActivate={() => setActiveStep(i)}
+            orientation="vertical"
+            showConnector={i < CUOTAS_STEPS.length - 1}
+            connectorActive={activeStep > i}
+          />
         ))}
       </div>
     </div>
@@ -1573,7 +1722,7 @@ function ForCompanies() {
                   style={{ background: "var(--gradient-orb)" }}
                 />
                 <div className="relative text-left text-primary-foreground">
-                  <Building2 className="h-8 w-8 text-white sm:h-10 sm:w-10" strokeWidth={2.25} />
+                  <SectionIcon icon={Landmark} size="xl" surface="dark" />
                   <div className="mt-4 text-4xl font-bold leading-tight sm:mt-6 sm:text-5xl">+85%</div>
                   <p className="mt-2 text-left text-base leading-relaxed text-white/90 sm:text-lg">
                     de los empleados reportan mayor tranquilidad financiera tras adoptar adelantos de nómina.
