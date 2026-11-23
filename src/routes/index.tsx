@@ -1,822 +1,320 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { SectionIcon } from "@/components/ui/icon";
-import { cn } from "@/lib/utils";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
-  ShieldCheck,
-  ArrowRight,
-  CircleCheckBig,
-  HeartPulse,
-  UserRoundMinus,
-  CircleDollarSign,
-  Menu,
-  ChevronLeft,
-  Home,
-  Gift,
-  Split,
-  Route as RouteIcon,
-  BriefcaseBusiness,
-  Rocket,
-  CalendarRange,
-  UserRoundCheck,
-  PiggyBank,
-  TabletSmartphone,
-  CalendarClock,
-  ClipboardList,
-  FileSpreadsheet,
   Activity,
-  Landmark,
-  BadgeDollarSign,
-  UserRoundPlus,
-  type LucideIcon,
-} from "@/components/icons";
+  ArrowUp,
+  CalendarClock,
+  Check,
+  FileCheck2,
+  FileSpreadsheet,
+  MessageCircle,
+  ShieldCheck,
+  Smartphone,
+  Users,
+  Wallet,
+} from "lucide-react";
 
-const WHATSAPP_NUMBER = "573169393922";
-const WHATSAPP_MESSAGE = encodeURIComponent(
-  "Hola, me interesa una demo de AdeCerebiia para mi empresa."
-);
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`;
-const LOGIN_URL = "https://adelantos.cerebiia.com.co/login";
-const REGISTER_URL = "https://adelantos.cerebiia.com.co/registro";
+/* ─────────────────────────────────────────────────────────────
+   Reglas comerciales vigentes (configurables desde el panel admin).
+   Si cambian en la plataforma, actualizarlas aquí.
+   ───────────────────────────────────────────────────────────── */
+const TARIFA_POR_CUOTA = 8_000;
+const TOPE_PORCENTAJE = 30;
+const MAX_CUOTAS = 3;
 
-const NAV_LINKS = [
-  { href: "#inicio", label: "Inicio", icon: Home },
-  { href: "#producto", label: "Beneficios", icon: Gift },
-  { href: "#cuotas", label: "Pagos a cuotas", icon: Split },
-  { href: "#como-funciona", label: "Cómo funciona", icon: RouteIcon },
-  { href: "#empresas", label: "Para empresas", icon: BriefcaseBusiness },
-] as const;
+const WHATSAPP_NUMBER = "573209576723"; // +57 320 957 6723
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+  "Hola, quiero conocer ZÜPA para los empleados de mi empresa.",
+)}`;
 
-function navigateToHash(href: string) {
-  if (!href.startsWith("#")) return;
-  const id = href.slice(1);
-  const target = document.getElementById(id);
-  if (!target) return;
+/* Aplicación de ZÜPA (empleados y empresas). Se puede sobrescribir con VITE_APP_URL. */
+const APP_URL = (import.meta.env.VITE_APP_URL as string | undefined) ?? "https://adelantos.cerebiia.com.co";
+const LOGIN_URL = `${APP_URL}/login`;
+const ACTIVATE_URL = `${APP_URL}/registro?activar=1`;
 
-  target.scrollIntoView({ behavior: "smooth", block: "start" });
-  window.history.pushState(null, "", href);
+const cop = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+const formatCOP = (value: number) => `$${cop.format(Math.round(value))}`;
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Retraso escalonado para elementos con data-reveal. */
+const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
+
+/**
+ * Revela con una transición los elementos marcados con `data-reveal`
+ * cuando entran en pantalla. Sin JS o con movimiento reducido, todo es visible.
+ */
+function useScrollReveal() {
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    if (prefersReducedMotion() || !("IntersectionObserver" in window)) {
+      els.forEach((el) => el.classList.add("is-visible"));
+      return;
+    }
+    document.documentElement.classList.add("reveal-ready");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 }
 
-const NAV_ICON_HOVER_ANIM: Record<(typeof NAV_LINKS)[number]["href"], string> = {
-  "#inicio": "nav-icon-anim-home",
-  "#producto": "nav-icon-anim-medal",
-  "#cuotas": "nav-icon-anim-banknote",
-  "#como-funciona": "nav-icon-anim-workflow",
-  "#empresas": "nav-icon-anim-building",
-};
-
-function BenefitCardIcon({ icon, light = false }: { icon: LucideIcon; light?: boolean }) {
-  return (
-    <SectionIcon
-      icon={icon}
-      size="lg"
-      surface={light ? "light" : "dark"}
-      className="benefit-card-icon mb-4"
-    />
-  );
+/** Valor que "rueda" hasta el nuevo número cuando cambia (simulador). */
+function useTweened(target: number, duration = 420) {
+  const [value, setValue] = useState(target);
+  const from = useRef(target);
+  const raf = useRef(0);
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      from.current = target;
+      setValue(target);
+      return;
+    }
+    const start = performance.now();
+    const origin = from.current;
+    cancelAnimationFrame(raf.current);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const current = origin + (target - origin) * (1 - Math.pow(1 - t, 3));
+      from.current = current;
+      setValue(current);
+      if (t < 1) raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, duration]);
+  return value;
 }
 
-/* ---------- Design system (glass) ---------- */
-function GlassCard({
-  children,
-  className = "",
-  hover = true,
-  light = false,
-  as: Tag = "div",
+/** Sección visible en el centro de la pantalla (para marcarla en el menú). */
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) if (entry.isIntersecting) setActive(entry.target.id);
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+  }, [ids]);
+  return active;
+}
+
+const NAV_SECTIONS = ["confianza", "como-funciona", "simulador", "panel"];
+
+/** Monto que cuenta desde 0 la primera vez que aparece en pantalla. */
+function CountUp({
+  value,
+  duration = 1100,
+  prefix = "",
+  format = formatCOP,
 }: {
-  children: ReactNode;
-  className?: string;
-  hover?: boolean;
-  light?: boolean;
-  as?: "div" | "article";
+  value: number;
+  duration?: number;
+  prefix?: string;
+  format?: (n: number) => string;
 }) {
-  const base = light ? "glass-card-light" : "glass-card";
-  const hoverClass = hover ? (light ? "glass-card-light-hover" : "glass-card-hover") : "";
-
+  const ref = useRef<HTMLSpanElement>(null);
+  const [current, setCurrent] = useState(value);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || prefersReducedMotion() || !("IntersectionObserver" in window)) return;
+    let raf = 0;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        io.disconnect();
+        const start = performance.now();
+        const tick = (now: number) => {
+          const t = Math.min(1, (now - start) / duration);
+          setCurrent(value * (1 - Math.pow(1 - t, 3)));
+          if (t < 1) raf = requestAnimationFrame(tick);
+        };
+        setCurrent(0);
+        raf = requestAnimationFrame(tick);
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [value, duration]);
   return (
-    <Tag className={`${base} ${hoverClass} ${className}`}>
-      {children}
-    </Tag>
-  );
-}
-
-function SectionBadge({ children }: { children: ReactNode }) {
-  return <div className="section-badge">{children}</div>;
-}
-
-function SectionHeader({
-  badge,
-  title,
-  subtitle,
-  centered = true,
-  className = "",
-}: {
-  badge?: string;
-  title: string;
-  subtitle?: string;
-  centered?: boolean;
-  className?: string;
-}) {
-  return (
-    <div className={`${centered ? "mx-auto max-w-2xl text-center" : ""} ${className}`}>
-      {badge && <SectionBadge>{badge}</SectionBadge>}
-      <h2 className="section-title">{title}</h2>
-      {subtitle && <p className="section-subtitle">{subtitle}</p>}
-    </div>
-  );
-}
-
-function GlassButtonPrimary({
-  href,
-  children,
-  className = "",
-  external = false,
-}: {
-  href: string;
-  children: ReactNode;
-  className?: string;
-  external?: boolean;
-}) {
-  return (
-    <a
-      href={href}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className={`btn-glass-primary nav-btn-lift ${className}`}
-    >
-      {children}
-    </a>
-  );
-}
-
-function GlassButtonEmployeeAccess({
-  href,
-  children,
-  className = "",
-}: {
-  href: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <a href={href} className={`btn-glass-employee ${className}`}>
-      <span className="btn-glass-employee-shimmer" aria-hidden />
-      <span className="relative">{children}</span>
-    </a>
-  );
-}
-
-function CheckIcon({ light = false }: { light?: boolean }) {
-  return (
-    <SectionIcon
-      icon={CircleCheckBig}
-      size="sm"
-      surface={light ? "dark" : "dark"}
-      className="mt-0.5 shrink-0"
-    />
+    <span ref={ref} className="tabular-nums">
+      {prefix}
+      {format(current)}
+    </span>
   );
 }
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdeCerebiia — Adelantos de nómina para tu empresa" },
+      { title: "ZÜPA · Adelantos de nómina sin costo para tu empresa" },
       {
         name: "description",
         content:
-          "Plataforma de adelantos de nómina con pagos hasta en 3 cuotas. La empresa no paga nada: el empleado asume una tarifa fija de $8.000 por adelanto.",
+          "Tus empleados reciben parte del salario que ya trabajaron, cuando lo necesitan. ZÜPA pone el dinero y tu empresa no paga nada: solo descuenta las cuotas en la nómina.",
       },
-      { property: "og:title", content: "AdeCerebiia — Adelantos de nómina" },
+      { property: "og:title", content: "ZÜPA · Adelantos de nómina sin costo para tu empresa" },
       {
         property: "og:description",
         content:
-          "Bienestar financiero para tus empleados. Adelantos hasta en 3 cuotas y cero riesgo para la empresa.",
+          "Un beneficio para tu equipo que tu empresa no paga. Adelantos de nómina en 1 a 3 cuotas, 100 % digitales.",
       },
     ],
   }),
   component: Index,
 });
 
-const LANDING_OUTLINE_STYLES = {
-  sm: "landing-deco-outline-sm",
-  md: "landing-deco-outline",
-  lg: "landing-deco-outline-lg",
-} as const;
-
-const LIGHT_OUTLINE_STYLES = {
-  sm: "light-deco-outline-sm",
-  md: "light-deco-outline",
-  lg: "light-deco-outline-lg",
-} as const;
-
-type SectionShape = {
-  top: number;
-  left: number;
-  size: number;
-  type: "circle" | "pill" | "diamond" | "square" | "rounded";
-  anim: number;
-  outline: keyof typeof LANDING_OUTLINE_STYLES;
-  rotate?: number;
-};
-
-const LANDING_SHAPES = [
-  { top: 4, left: 6, size: 300, type: "circle", anim: 0, outline: "lg" },
-  { top: 7, left: 94, size: 280, type: "circle", anim: 1, outline: "md" },
-  { top: 11, left: 42, size: 160, type: "square", anim: 2, outline: "sm", rotate: 45 },
-  { top: 15, left: 72, size: 220, type: "circle", anim: 3, outline: "md" },
-  { top: 19, left: 18, size: 200, type: "circle", anim: 4, outline: "lg" },
-  { top: 23, left: 58, size: 140, type: "square", anim: 0, outline: "sm", rotate: 8 },
-  { top: 27, left: 88, size: 260, type: "circle", anim: 1, outline: "md" },
-  { top: 31, left: 28, size: 180, type: "square", anim: 2, outline: "lg", rotate: 14 },
-  { top: 35, left: 50, size: 120, type: "square", anim: 3, outline: "md", rotate: 45 },
-  { top: 39, left: 8, size: 320, type: "circle", anim: 4, outline: "lg" },
-  { top: 43, left: 82, size: 170, type: "square", anim: 0, outline: "sm", rotate: -10 },
-  { top: 47, left: 35, size: 240, type: "circle", anim: 1, outline: "md" },
-  { top: 51, left: 65, size: 150, type: "circle", anim: 2, outline: "lg" },
-  { top: 55, left: 92, size: 200, type: "circle", anim: 3, outline: "sm" },
-  { top: 59, left: 14, size: 260, type: "circle", anim: 4, outline: "md" },
-  { top: 63, left: 48, size: 130, type: "square", anim: 0, outline: "lg", rotate: 22 },
-  { top: 67, left: 76, size: 290, type: "circle", anim: 1, outline: "md" },
-  { top: 71, left: 22, size: 160, type: "square", anim: 2, outline: "sm", rotate: 45 },
-  { top: 75, left: 55, size: 220, type: "circle", anim: 3, outline: "lg" },
-  { top: 79, left: 86, size: 180, type: "circle", anim: 4, outline: "md" },
-  { top: 83, left: 10, size: 140, type: "circle", anim: 0, outline: "sm" },
-  { top: 87, left: 38, size: 250, type: "circle", anim: 1, outline: "lg" },
-  { top: 90, left: 68, size: 170, type: "square", anim: 2, outline: "md", rotate: -16 },
-  { top: 93, left: 52, size: 110, type: "square", anim: 3, outline: "sm", rotate: 45 },
-  { top: 96, left: 24, size: 200, type: "circle", anim: 4, outline: "lg" },
-  { top: 97, left: 90, size: 280, type: "circle", anim: 0, outline: "md" },
-] as const satisfies readonly SectionShape[];
-
-const LIGHT_SECTION_SHAPES = [
-  { top: 10, left: 8, size: 320, type: "circle", anim: 0, outline: "lg" },
-  { top: 10, left: 92, size: 280, type: "square", anim: 1, outline: "lg", rotate: 12 },
-  { top: 90, left: 8, size: 260, type: "square", anim: 2, outline: "md", rotate: 45 },
-  { top: 90, left: 92, size: 300, type: "circle", anim: 3, outline: "lg" },
-] as const satisfies readonly SectionShape[];
-
-function landingShapeRadius(type: SectionShape["type"]) {
-  switch (type) {
-    case "circle":
-    case "pill":
-      return "rounded-full";
-    case "square":
-      return "rounded-xl";
-    case "rounded":
-      return "rounded-[2rem]";
-    case "diamond":
-      return "rounded-2xl";
-  }
-}
-
-function ShapeDecorations({
-  shapes,
-  outlineStyles,
-  large = false,
-  subtle = false,
-  cornerOnly = false,
-}: {
-  shapes: readonly SectionShape[];
-  outlineStyles: Record<keyof typeof LANDING_OUTLINE_STYLES, string>;
-  large?: boolean;
-  subtle?: boolean;
-  cornerOnly?: boolean;
-}) {
-  const minSize = large ? "10rem" : "8rem";
-  const vwSize = large ? "30vw" : "22vw";
-  const borderClass = subtle ? "border" : "border-2";
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {shapes.map((shape, i) => {
-        const isPill = shape.type === "pill";
-        const isDiamond = shape.type === "diamond";
-        const extraRotate = shape.rotate ?? 0;
-        const size = `clamp(${minSize}, ${vwSize}, ${shape.size}px)`;
-        const pillWidth = `clamp(12rem, 34vw, ${Math.round(shape.size * 1.65)}px)`;
-        const pillHeight = `clamp(4rem, 10vw, ${Math.round(shape.size * 0.42)}px)`;
-        const driftClass = cornerOnly
-          ? `corner-shape-drift-${shape.anim}`
-          : `landing-shape-drift-${shape.anim}`;
-
-        return (
-          <div
-            key={`${shape.top}-${shape.left}-${i}`}
-            className={`absolute ${driftClass}`}
-            style={{
-              top: `${shape.top}%`,
-              left: `${shape.left}%`,
-              animationDelay: `${i * 1.4}s`,
-            }}
-          >
-            <div
-              className={`${borderClass} ${landingShapeRadius(shape.type)} ${outlineStyles[shape.outline]}`}
-              style={{
-                width: isPill ? pillWidth : size,
-                height: isPill ? pillHeight : size,
-                transform: `translate(-50%, -50%)${isDiamond ? " rotate(45deg)" : extraRotate ? ` rotate(${extraRotate}deg)` : ""}`,
-              }}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function LandingDecorations() {
-  return <ShapeDecorations shapes={LANDING_SHAPES} outlineStyles={LANDING_OUTLINE_STYLES} />;
-}
-
-function LightSectionDecorations() {
-  return (
-    <ShapeDecorations
-      shapes={LIGHT_SECTION_SHAPES}
-      outlineStyles={LIGHT_OUTLINE_STYLES}
-      large
-      subtle
-      cornerOnly
-    />
-  );
-}
-
 function Index() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const closeMobileMenu = useCallback(() => {
-    setMobileOpen(false);
-  }, []);
-
-  const openMobileMenu = useCallback(() => {
-    setMobileOpen(true);
-  }, []);
-
+  useScrollReveal();
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-landing text-white antialiased">
-      <div className="relative min-h-screen">
-        <LandingDecorations />
-
-        <div className="relative z-[1]">
-        <Nav
-          mobileOpen={mobileOpen}
-          onOpenMobile={openMobileMenu}
-        />
-        <MobileNavMenu open={mobileOpen} onClose={closeMobileMenu} />
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="scroll-progress" aria-hidden />
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-lime focus:px-4 focus:py-2 focus:text-navy"
+      >
+        Saltar al contenido
+      </a>
+      <Nav />
+      <main id="contenido">
         <Hero />
-        <ImpactMetrics />
-        <CorporateBenefits />
-        <Features />
-        <Installments />
+        <Ticker />
+        <ZeroDeal />
+        <TrustSection />
         <HowItWorks />
+        <Simulator />
         <ForCompanies />
-        <CTA />
-        <Footer />
-        </div>
-      </div>
+        <FinalCta />
+      </main>
+      <Footer />
     </div>
   );
 }
 
-/* ---------- Scroll reveal ---------- */
-function Reveal({
+/* ---------- Piezas compartidas ---------- */
+
+function Logo({ className = "h-10" }: { className?: string }) {
+  return <img src="/zupa-logo.png" alt="ZÜPA" className={`w-auto rounded-lg ${className}`} />;
+}
+
+function WhatsAppButton({
   children,
-  delay = 0,
+  tone = "lime",
   className = "",
 }: {
   children: ReactNode;
-  delay?: number;
+  tone?: "lime" | "navy";
   className?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            (e.target as HTMLElement).classList.add("is-visible");
-            io.unobserve(e.target);
-          }
-        }
-      },
-      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return (
-    <div
-      ref={ref}
-      className={`reveal ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* ---------- Section activation (scroll + nav hash) ---------- */
-function useSectionActivation(sectionId: string) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [active, setActive] = useState(false);
-
-  const trigger = useCallback(() => {
-    setActive(false);
-    window.setTimeout(() => setActive(true), 60);
-  }, []);
-
-  const reset = useCallback(() => setActive(false), []);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) trigger();
-        else reset();
-      },
-      { threshold: 0.16, rootMargin: "0px 0px -48px 0px" }
-    );
-
-    io.observe(el);
-    return () => io.disconnect();
-  }, [trigger, reset]);
-
-  useEffect(() => {
-    const hash = `#${sectionId}`;
-
-    const onHash = () => {
-      if (window.location.hash === hash) trigger();
-    };
-
-    const onNavClick = (event: MouseEvent) => {
-      const target = (event.target as HTMLElement).closest(`a[href="${hash}"]`);
-      if (target) window.setTimeout(trigger, 320);
-    };
-
-    if (window.location.hash === hash) trigger();
-
-    window.addEventListener("hashchange", onHash);
-    document.addEventListener("click", onNavClick);
-    return () => {
-      window.removeEventListener("hashchange", onHash);
-      document.removeEventListener("click", onNavClick);
-    };
-  }, [sectionId, trigger]);
-
-  return { sectionRef, active };
-}
-
-/* ---------- Logo ---------- */
-function Logo({ inverted = false }: { inverted?: boolean }) {
-  return (
-    <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-      <div
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold text-primary-foreground shadow-[var(--shadow-brand)] sm:h-10 sm:w-10 sm:text-lg"
-        style={{ background: "var(--gradient-brand)" }}
-      >
-        A
-      </div>
-      <span
-        className={`truncate text-base font-semibold tracking-tight sm:text-lg ${
-          inverted ? "text-white" : "text-foreground"
-        }`}
-      >
-        AdeCerebiia
-      </span>
-    </div>
-  );
-}
-
-/* ---------- Nav ---------- */
-function NavInlineLink({
-  href,
-  label,
-  icon,
-  onClick,
-  index = 0,
-}: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
-  index?: number;
-}) {
-  const iconAnim =
-    NAV_ICON_HOVER_ANIM[href as keyof typeof NAV_ICON_HOVER_ANIM] ?? "nav-icon-anim-home";
-
-  return (
-    <a
-      href={href}
-      title={label}
-      onClick={onClick}
-      style={{ animationDelay: `${index * 55}ms` }}
-      className="nav-inline-link nav-item-enter group inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white transition-all duration-300 xl:px-3.5"
-    >
-      <span className={`nav-card-icon inline-flex ${iconAnim}`}>
-        <SectionIcon icon={icon} size="xs" surface="dark" className="nav-inline-icon" />
-      </span>
-      <span className="relative whitespace-nowrap">{label}</span>
-    </a>
-  );
-}
-
-function NavCardLink({
-  href,
-  label,
-  icon,
-  onClick,
-  index = 0,
-  className = "",
-  mobile = false,
-}: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
-  index?: number;
-  className?: string;
-  mobile?: boolean;
-}) {
-  const iconAnim =
-    NAV_ICON_HOVER_ANIM[href as keyof typeof NAV_ICON_HOVER_ANIM] ?? "nav-icon-anim-home";
-
-  return (
-    <a
-      href={href}
-      title={label}
-      onClick={onClick}
-      style={mobile ? undefined : { animationDelay: `${index * 70}ms` }}
-      className={`nav-card-link ${mobile ? "" : "nav-item-enter"} group flex w-full min-w-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-white/5 px-1.5 py-2 text-white shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:border-white/20 hover:bg-white/10 ${mobile ? "mobile-nav-card mobile-nav-item" : ""} ${className}`}
-    >
-      <span className={`nav-card-icon inline-flex ${iconAnim}`}>
-        <SectionIcon icon={icon} size="sm" surface="dark" className="nav-card-icon-svg" />
-      </span>
-      <span className="mt-1.5 max-w-full text-center text-[10px] font-medium leading-tight text-white/80 transition-colors duration-300 group-hover:text-white sm:text-[11px]">
-        {label}
-      </span>
-    </a>
-  );
-}
-
-function NavLoginLink({
-  className = "",
-  stacked = false,
-  onNavigate,
-}: {
-  className?: string;
-  stacked?: boolean;
-  onNavigate?: () => void;
-}) {
-  const visibility = stacked ? "inline-flex" : "hidden lg:inline-flex";
-
-  return (
-    <a
-      href={LOGIN_URL}
-      onClick={onNavigate}
-      className={`nav-link-ingresar ${visibility} items-center text-xs font-medium sm:text-sm ${stacked ? "mobile-sheet-footer-item mobile-sheet-login w-full justify-center py-2.5" : "px-1"} ${className}`}
-    >
-      Ingresar
-    </a>
-  );
-}
-
-function NavCta({
-  className = "",
-  stacked = false,
-  onNavigate,
-}: {
-  className?: string;
-  stacked?: boolean;
-  onNavigate?: () => void;
-}) {
-  const visibility = stacked ? "inline-flex" : "hidden lg:inline-flex";
-
+  const tones = {
+    lime: "bg-lime text-navy hover:bg-[oklch(0.95_0.17_125)] focus-visible:ring-lime focus-visible:ring-offset-navy",
+    navy: "bg-navy text-white hover:bg-navy-2 focus-visible:ring-navy focus-visible:ring-offset-white",
+  };
   return (
     <a
       href={WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={onNavigate}
-      className={`nav-btn-cta nav-btn-lift ${visibility} items-center justify-center gap-1.5 rounded-full px-4 py-2 text-xs sm:gap-2 sm:text-sm sm:px-5 sm:py-2.5 ${stacked ? "mobile-sheet-footer-item mobile-sheet-cta w-full" : ""} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${tones[tone]} ${className}`}
     >
-      Contáctanos
-      <ArrowRight className="nav-arrow-slide h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+      <MessageCircle className="h-[1.1em] w-[1.1em]" aria-hidden />
+      {children}
     </a>
   );
 }
 
-function MobileNavMenu({
-  open,
-  onClose,
+function SectionHeading({
+  title,
+  intro,
+  align = "left",
+  invert = false,
 }: {
-  open: boolean;
-  onClose: () => void;
+  title: ReactNode;
+  intro?: ReactNode;
+  align?: "left" | "center";
+  invert?: boolean;
 }) {
-  const [mounted, setMounted] = useState(false);
-  const pendingHashRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.documentElement.style.overflow = previousHtmlOverflow;
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, onClose]);
-
-  useEffect(() => {
-    if (open || !pendingHashRef.current) return;
-
-    const hash = pendingHashRef.current;
-    pendingHashRef.current = null;
-    const timer = window.setTimeout(() => navigateToHash(hash), 280);
-    return () => window.clearTimeout(timer);
-  }, [open]);
-
-  const handleNavClick = useCallback(
-    (href: string, event?: MouseEvent<HTMLAnchorElement>) => {
-      if (href.startsWith("#")) {
-        event?.preventDefault();
-        pendingHashRef.current = href;
-        onClose();
-        return;
-      }
-      onClose();
-    },
-    [onClose],
-  );
-
-  if (!mounted || !open) return null;
-
-  return createPortal(
-    <div className="mobile-sheet-root fixed inset-0 z-[9999] lg:hidden" aria-hidden={!open}>
-      <div
-        className="mobile-sheet-backdrop fixed inset-0 z-0 bg-black/80"
-        aria-hidden
-        onClick={onClose}
-      />
-      <aside
-        role="dialog"
-        aria-modal="true"
-        aria-label="Menú de navegación"
-        data-state="open"
-        className="mobile-sheet pointer-events-auto fixed inset-y-0 right-0 z-20 flex h-dvh w-[min(100vw,22rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 border-l border-white/15 bg-white/8 text-white shadow-[-8px_0_40px_rgba(15,23,42,0.35)] backdrop-blur-2xl"
+  return (
+    <div data-reveal className={align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
+      <h2
+        className={`text-balance text-[clamp(2rem,4.2vw,3.25rem)] font-extrabold leading-[1.05] tracking-[-0.03em] ${
+          invert ? "text-white" : "text-navy"
+        }`}
       >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,hsl(265_55%_55%_/_0.18),transparent_55%)]"
-          aria-hidden
-        />
-
-        <div className="mobile-sheet-header relative z-30 flex items-center justify-between gap-3 border-b border-white/15 px-4 py-4 sm:px-6 sm:py-5">
-          <Logo inverted />
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onClose();
-            }}
-            className="mobile-sheet-close relative z-30 inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:border-white/35 hover:bg-white/20 active:scale-95"
-            aria-label="Cerrar menú"
-          >
-            <ChevronLeft className="h-5 w-5 pointer-events-none" strokeWidth={2.25} aria-hidden />
-          </button>
-        </div>
-
-        <nav
-          className="mobile-sheet-nav relative z-20 grid grid-cols-2 gap-3 p-4 sm:grid-cols-2"
-          aria-label="Menú móvil"
+        {title}
+      </h2>
+      {intro ? (
+        <p
+          className={`mt-4 text-lg leading-relaxed ${
+            invert ? "text-lavender" : "text-muted-foreground"
+          }`}
         >
-          {NAV_LINKS.map((link, i) => (
-            <NavCardLink
-              key={link.href}
-              {...link}
-              index={i}
-              mobile
-              className="min-w-0 w-full py-3.5"
-              onClick={(event) => handleNavClick(link.href, event)}
-            />
-          ))}
-        </nav>
-
-        <div className="mobile-sheet-footer relative z-20 mt-auto space-y-3 border-t border-white/15 p-4">
-          <NavLoginLink stacked onNavigate={onClose} />
-          <NavCta stacked className="justify-center" onNavigate={onClose} />
-        </div>
-      </aside>
-    </div>,
-    document.body,
+          {intro}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
-function Nav({
-  mobileOpen,
-  onOpenMobile,
-}: {
-  mobileOpen: boolean;
-  onOpenMobile: () => void;
-}) {
-  const [scrolled, setScrolled] = useState(false);
-  const [navVisible, setNavVisible] = useState(true);
-  const lastScrollY = useRef(0);
+/* ---------- Nav ---------- */
 
-  useEffect(() => {
-    const SCROLL_THRESHOLD = 10;
-
-    const onScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 12);
-
-      if (currentScrollY <= 12) {
-        setNavVisible(true);
-      } else {
-        const delta = currentScrollY - lastScrollY.current;
-        if (delta > SCROLL_THRESHOLD) {
-          setNavVisible(false);
-        } else if (delta < -SCROLL_THRESHOLD) {
-          setNavVisible(true);
-        }
-      }
-
-      lastScrollY.current = currentScrollY;
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    if (mobileOpen) setNavVisible(true);
-  }, [mobileOpen]);
-
+function Nav() {
+  const active = useActiveSection(NAV_SECTIONS);
+  const links = [
+    { href: "#confianza", label: "Confianza" },
+    { href: "#como-funciona", label: "Cómo funciona" },
+    { href: "#simulador", label: "Simulador" },
+    { href: "#panel", label: "Panel empresa" },
+  ];
   return (
-    <header
-      className={`nav-header-enter nav-header-scrollable sticky top-0 z-40 w-full border-b border-white/15 bg-white/8 text-white backdrop-blur-xl ${
-        scrolled ? "border-white/20 bg-white/12 shadow-[0_8px_40px_rgba(15,23,42,0.22)]" : ""
-      } ${navVisible ? "nav-header-visible" : "nav-header-hidden"}`}
-    >
-      <div className="mx-auto w-full max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8 lg:py-3">
-        <div className="flex items-center gap-3 lg:gap-4">
-          <a
-            href="#inicio"
-            className="nav-logo-hover shrink-0"
-            aria-label="AdeCerebiia — inicio"
-          >
-            <Logo inverted />
-          </a>
-
-          <nav
-            className="nav-item-enter hidden min-w-0 flex-1 items-center justify-end gap-0.5 lg:flex xl:gap-1"
-            style={{ animationDelay: "180ms" }}
-            aria-label="Navegación principal"
-          >
-            {NAV_LINKS.map((link, i) => (
-              <NavInlineLink
-                key={link.href}
-                {...link}
-                index={i}
-                onClick={(event) => {
-                  if (link.href.startsWith("#")) {
-                    event.preventDefault();
-                    navigateToHash(link.href);
-                  }
-                }}
-              />
-            ))}
-          </nav>
-
-          <div
-            className="nav-item-enter ml-auto flex shrink-0 items-center justify-end gap-2 sm:gap-2.5 lg:ml-0"
-            style={{ animationDelay: "350ms" }}
-          >
-            <NavLoginLink />
-            <NavCta />
-
-            <button
-              type="button"
-              aria-expanded={mobileOpen}
-              onClick={onOpenMobile}
-              className="nav-menu-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all duration-300 hover:bg-white/20 lg:hidden sm:h-10 sm:w-10"
-              aria-label="Abrir menú"
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-navy">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-5 sm:px-6">
+        <a href="#contenido" aria-label="ZÜPA, inicio" className="-ml-2 rounded-lg">
+          <Logo className="h-12" />
+        </a>
+        <nav aria-label="Secciones" className="hidden items-center gap-8 md:flex">
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              aria-current={active === l.href.slice(1) ? "true" : undefined}
+              className={`nav-link relative text-sm font-medium transition-colors hover:text-white ${
+                active === l.href.slice(1) ? "nav-link--active text-white" : "text-lavender"
+              }`}
             >
-              <Menu className="nav-menu-icon h-5 w-5" />
-            </button>
-          </div>
+              {l.label}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-1 sm:gap-3">
+          <a
+            href={LOGIN_URL}
+            className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white transition-colors hover:text-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
+          >
+            Ingresar
+          </a>
+          <WhatsAppButton className="min-h-11 px-4 py-2.5 text-sm">Agendar demo</WhatsAppButton>
         </div>
       </div>
     </header>
@@ -824,1028 +322,1059 @@ function Nav({
 }
 
 /* ---------- Hero ---------- */
-const HERO_HIGHLIGHTS = [
-  {
-    icon: CalendarClock,
-    title: "Control Operativo Total",
-    desc: "Define ventanas de tiempo personalizadas. Las solicitudes se desactivan automáticamente antes del cierre de nómina para garantizar un proceso contable limpio.",
-  },
-  {
-    icon: ClipboardList,
-    title: "Cero Carga Administrativa",
-    desc: "Transforma las solicitudes manuales en un registro digital centralizado, ordenado y auditable.",
-  },
-  {
-    icon: FileSpreadsheet,
-    title: "Conciliación sin Errores",
-    desc: "Exporta reportes consolidados listos para aplicar a tu software de nómina tradicional al finalizar el periodo permitido.",
-  },
-] as const;
-
-function HeroHighlight({
-  icon,
-  title,
-  desc,
-}: {
-  icon: LucideIcon;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <GlassCard className="flex items-start gap-3.5 p-4 sm:gap-4 sm:p-5" hover>
-      <SectionIcon icon={icon} size="md" surface="accent" className="hero-highlight-icon mt-0.5 shrink-0" />
-      <div className="min-w-0 pt-0.5 text-left">
-        <div className="text-sm font-semibold text-white sm:text-base">{title}</div>
-        <div className="mt-0.5 text-left text-xs leading-relaxed text-white/70 sm:text-sm">{desc}</div>
-      </div>
-    </GlassCard>
-  );
-}
 
 function Hero() {
   return (
-    <section id="inicio" className="relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 pt-6 pb-14 sm:px-6 sm:pt-8 sm:pb-20 lg:pt-8 lg:pb-24">
-        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-          <Reveal>
-            <div className="relative max-w-xl py-2 sm:py-4 lg:py-2">
-              <div className="lg:hidden">
-                <Logo inverted />
-              </div>
-              <div className="section-badge mt-6 sm:mt-6 lg:mt-0">
-                Gestión de adelantos de nómina
-              </div>
-              <h1 className="mt-5 text-[1.75rem] font-bold leading-[1.12] tracking-tight text-white sm:mt-6 sm:text-4xl sm:leading-[1.08] lg:text-5xl">
-                Bienestar para tu equipo,
-                <br />
-                control{" "}
-                <span className="hero-title-accent">para tu empresa.</span>
-              </h1>
-              <p className="mt-4 max-w-lg text-left text-sm leading-relaxed text-white/80 sm:text-base">
-                Automatiza, gestiona y registra las solicitudes de adelanto de nómina de tus
-                colaboradores. Una plataforma diseñada para integrarse a tu flujo operativo actual
-                de forma fluida, elegante y segura.
-              </p>
+    <section className="relative overflow-hidden bg-navy text-white">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-10 sm:gap-14 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:pb-28 lg:pt-20">
+        <div>
+          <p className="hero-in text-base font-medium text-lime" style={delay(0)}>Adelantos de nómina para tu equipo</p>
+          <h1 style={delay(90)} className="hero-in mt-4 text-balance text-[clamp(2.35rem,5.6vw,4.5rem)] font-extrabold leading-[1.02] tracking-[-0.04em]">
+            Un beneficio para tus empleados que tu empresa no paga.
+          </h1>
+          <p className="hero-in mt-6 max-w-xl text-lg leading-relaxed text-lavender" style={delay(220)}>
+            Tus empleados reciben parte del salario que ya trabajaron, el día que lo necesitan.
+            ZÜPA pone el dinero; tu empresa solo descuenta las cuotas en la nómina.
+          </p>
+          <div className="hero-in mt-8 grid gap-3 sm:mt-9 sm:flex sm:flex-wrap sm:items-center" style={delay(340)}>
+            <WhatsAppButton className="w-full px-6 py-3.5 text-base sm:w-auto">Agendar una demo</WhatsAppButton>
+            <a
+              href="#como-funciona"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-white/20 px-6 py-3.5 text-base font-medium text-white sm:w-auto transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
+            >
+              Ver cómo funciona
+            </a>
+          </div>
+          <p className="hero-in mt-6 text-sm text-lavender" style={delay(440)}>
+            ¿Ya usas ZÜPA?{" "}
+            <a
+              href={LOGIN_URL}
+              className="rounded font-semibold text-lime underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
+            >
+              Ingresa a la app
+            </a>
+          </p>
+        </div>
 
-              <div className="mt-8 space-y-4 sm:space-y-5">
-                {HERO_HIGHLIGHTS.map((item) => (
-                  <HeroHighlight key={item.title} {...item} />
-                ))}
-              </div>
+        <PayslipVisual />
+      </div>
+    </section>
+  );
+}
 
-              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap">
-                <GlassButtonPrimary
-                  href={REGISTER_URL}
-                  className="w-full justify-center gap-2 sm:w-auto"
-                >
-                  Regístrate gratis
-                  <ArrowRight className="h-4 w-4" />
-                </GlassButtonPrimary>
-                <GlassButtonEmployeeAccess
-                  href={REGISTER_URL}
-                  className="w-full gap-2 sm:w-auto"
-                >
-                  <UserRoundPlus className="h-4 w-4 shrink-0" aria-hidden />
-                  Activar Acceso Empleado
-                </GlassButtonEmployeeAccess>
-              </div>
+/* ---------- Hero visual: el desprendible de nómina ---------- */
+
+/**
+ * El documento que RR. HH. conoce de memoria. El adelanto aparece como una
+ * deducción más: eso es todo lo que cambia para la empresa.
+ */
+function PayslipVisual() {
+  const salary = 3_000_000;
+  const salud = salary * 0.04;
+  const pension = salary * 0.04;
+  const cuota = 250_000;
+  const neto = salary - salud - pension - cuota;
+
+  return (
+    <figure className="payslip relative mx-auto w-full max-w-[470px]" aria-label="Ejemplo de desprendible de nómina con un adelanto ZÜPA">
+      <div className="payslip-card overflow-hidden rounded-2xl bg-white text-foreground shadow-[0_40px_90px_-35px_oklch(0_0_0/0.75)]">
+        <div className="flex items-start justify-between gap-4 border-b border-dashed border-border px-5 pb-4 pt-5 sm:px-6">
+          <div className="min-w-0">
+            <p className="font-display text-lg font-bold text-navy">Desprendible de nómina</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">Laura Méndez, noviembre de 2026</p>
+          </div>
+          <span className="shrink-0 rounded-full bg-mist px-3 py-1 text-xs font-medium text-muted-foreground">Ejemplo</span>
+        </div>
+
+        <div className="px-5 py-4 text-[15px] sm:px-6">
+          <p className="text-xs font-semibold text-muted-foreground">Devengado</p>
+          <PayslipRow label="Salario básico" value={formatCOP(salary)} />
+          <p className="mt-3 text-xs font-semibold text-muted-foreground">Deducciones</p>
+          <PayslipRow label="Salud (4 %)" value={`−${formatCOP(salud)}`} />
+          <PayslipRow label="Pensión (4 %)" value={`−${formatCOP(pension)}`} />
+          <div className="payslip-mark -mx-2 mt-1 rounded-lg px-2">
+            <PayslipRow label="Adelanto ZÜPA, cuota 1 de 2" value={`−${formatCOP(cuota)}`} strong />
+          </div>
+          {/* Nota al margen, como la escribiría alguien de nómina */}
+          <p className="payslip-note mt-2.5 inline-flex items-start gap-2 rounded-lg bg-navy px-3 py-2 text-[13px] font-semibold leading-snug text-lime">
+            <svg viewBox="0 0 16 16" className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Lo único que hace tu empresa: aplicar este descuento.
+          </p>
+        </div>
+
+        <div className="flex items-baseline justify-between gap-4 border-t border-border bg-mist px-5 py-4 sm:px-6">
+          <span className="text-sm font-medium text-muted-foreground">Neto a pagar</span>
+          <span className="font-display text-2xl font-extrabold tracking-[-0.03em] text-navy tabular-nums">{formatCOP(neto)}</span>
+        </div>
+      </div>
+
+      <figcaption className="payslip-total mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/15 px-5 py-4">
+        <span className="text-base font-medium text-white">Costo para tu empresa</span>
+        <span className="font-display text-4xl font-extrabold leading-none tracking-[-0.04em] text-lime">$0</span>
+      </figcaption>
+    </figure>
+  );
+}
+
+function PayslipRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-1.5">
+      <span className={strong ? "font-semibold text-navy" : "text-foreground"}>{label}</span>
+      <span className={`shrink-0 tabular-nums ${strong ? "font-bold text-navy" : "text-muted-foreground"}`}>{value}</span>
+    </div>
+  );
+}
+
+/** Notificación que ve el empleado cuando recibe su dinero. */
+function DisbursedToast({ amount }: { amount: number }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-white p-3.5 text-foreground shadow-[0_24px_60px_-20px_oklch(0.21_0.07_280/0.45)] ring-1 ring-border">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-lime text-navy">
+        <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+          <path d="M5 10.5l3.2 3.2L15 7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-navy">Adelanto desembolsado</p>
+        <p className="text-xs text-muted-foreground">{formatCOP(amount)} llegaron a tu cuenta</p>
+      </div>
+    </div>
+  );
+}
+
+/** Réplica simplificada de la pantalla de inicio del empleado en la app. */
+function PhoneMockup() {
+  return (
+    <div className="rounded-[2.75rem] bg-[oklch(0.16_0.06_281)] p-2.5 shadow-[0_40px_90px_-30px_oklch(0_0_0/0.7)] ring-1 ring-white/10">
+      <div className="overflow-hidden rounded-[2.2rem] bg-mist" aria-hidden>
+        <div className="flex items-center justify-between bg-white px-4 pb-2.5 pt-4">
+          <span className="font-display text-base font-extrabold text-navy">ZÜPA</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">
+            DG
+          </span>
+        </div>
+        <div className="space-y-3 p-3">
+          <div className="rounded-2xl bg-navy p-4 text-white">
+            <p className="font-display text-[15px] font-bold">Buenos días, Daniela</p>
+            <p className="mt-3 text-[10px] text-lavender">Disponible para adelanto</p>
+            <p className="font-display text-[32px] font-extrabold leading-none tracking-[-0.04em] text-lime">$510.000</p>
+            <p className="mt-1 text-[9px] text-lavender">Tope del {TOPE_PORCENTAJE} % de lo trabajado</p>
+            <div className="mt-3.5 rounded-lg bg-lime py-2 text-center text-[11px] font-bold text-navy">
+              Solicitar adelanto
             </div>
-          </Reveal>
-
-          <Reveal delay={150}>
-            <div className="relative flex min-h-[320px] items-center justify-center overflow-visible sm:min-h-[420px] lg:min-h-full lg:justify-end">
-              <div className="relative w-full max-w-sm overflow-visible lg:translate-x-6 xl:translate-x-10">
-                <TrustOrb />
-              </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-white p-2.5">
+              <p className="text-[9px] text-muted-foreground">Próximo pago</p>
+              <p className="font-display text-sm font-bold text-navy">30 de nov</p>
             </div>
-          </Reveal>
+            <div className="rounded-xl bg-white p-2.5">
+              <p className="text-[9px] text-muted-foreground">Cuotas</p>
+              <p className="font-display text-sm font-bold text-navy">1 a {MAX_CUOTAS}</p>
+            </div>
+          </div>
+          <div className="rounded-xl bg-white p-2.5">
+            <p className="text-[9px] text-muted-foreground">¿En cuántas cuotas?</p>
+            <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+              {[1, 2, 3].map((n) => (
+                <span
+                  key={n}
+                  className={`rounded-md py-1.5 text-center text-[10px] font-semibold ${
+                    n === 2 ? "bg-navy text-white" : "bg-mist text-navy"
+                  }`}
+                >
+                  {n}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="h-1" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Cinta de datos ---------- */
+
+function Ticker() {
+  const facts = [
+    "Tu empresa paga $0",
+    "100 % digital",
+    `De 1 a ${MAX_CUOTAS} cuotas`,
+    "Sin intereses",
+    `Hasta el ${TOPE_PORCENTAJE} % de lo trabajado`,
+    "Primer adelanto con la primera cuota gratis",
+  ];
+  const row = (hidden: boolean) => (
+    <ul className="flex shrink-0 items-center" aria-hidden={hidden || undefined}>
+      {facts.map((f) => (
+        <li key={f} className="flex items-center whitespace-nowrap">
+          <span className="px-6 font-display text-[clamp(1.25rem,2.6vw,2rem)] font-extrabold tracking-[-0.02em]">
+            {f}
+          </span>
+          <span className="h-2 w-2 rounded-full bg-navy" aria-hidden />
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <div className="overflow-hidden bg-lime py-5 text-navy">
+      <div className="ticker-track flex w-max">
+        {row(false)}
+        {row(true)}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- El trato: la cuenta de cada uno ---------- */
+
+function ZeroDeal() {
+  return (
+    <section className="bg-mist py-16 sm:py-28">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <SectionHeading
+          align="center"
+          title="Así se ve la cuenta para cada uno."
+          intro="Tu empresa no pone el dinero ni paga comisiones. El empleado paga una tarifa fija por cuota, solo cuando usa el adelanto."
+        />
+        <div className="mx-auto mt-14 grid max-w-5xl items-stretch gap-6 md:grid-cols-2 md:gap-8">
+          <CompanyBill />
+          <AdvanceReceipt amount={500_000} fee={TARIFA_POR_CUOTA} />
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- Hero visual: white card, original content ---------- */
-function TrustOrb() {
+/** La "factura" de la empresa: todo en $0. */
+function CompanyBill() {
+  const rows = ["Implementación", "Mensualidad", "Comisión por adelanto", "Dinero que adelantas"];
   return (
-    <div className="relative mx-auto mt-4 aspect-[4/5] w-full max-w-[300px] overflow-visible sm:mt-0 sm:aspect-[5/6] sm:max-w-[420px] lg:max-w-[480px]">
-      <div className="absolute -inset-6 -z-10 rounded-[3rem] bg-white/50 opacity-70 blur-3xl sm:-inset-10" />
-
-      <div
-        className="absolute left-1/2 top-4 h-[78%] w-[86%] -translate-x-1/2 rounded-3xl border-2 landing-deco-outline-lg sm:top-6"
-        style={{ transform: "translate(-46%, 0) rotate(-5deg)" }}
-      />
-
-      <div className="relative mx-auto mt-2 h-[88%] w-[92%] overflow-hidden rounded-2xl border border-foreground/8 bg-white p-5 text-foreground shadow-[0_20px_50px_rgba(15,23,42,0.1)] animate-float-slow sm:rounded-3xl sm:p-8">
-        <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border-2 border-primary/20 bg-transparent sm:h-96 sm:w-96" />
-        <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full border-2 border-accent/25 bg-transparent sm:h-96 sm:w-96" />
-
-        <div className="relative z-[1] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              A
+    <figure data-reveal="left" className="flex w-full flex-col" aria-label="Lo que paga tu empresa">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-3xl bg-navy text-white shadow-[0_30px_70px_-30px_oklch(0.21_0.07_280/0.6)]">
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <span className="font-display text-lg font-bold">Tu empresa</span>
+          <span className="whitespace-nowrap rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-lavender">
+            Todos los meses
+          </span>
+        </div>
+        <dl className="flex-1 divide-y divide-white/10 px-6">
+          {rows.map((label) => (
+            <div key={label} className="flex items-baseline justify-between gap-4 py-3.5">
+              <dt className="text-sm text-lavender">{label}</dt>
+              <dd className="font-display text-base font-semibold">$0</dd>
             </div>
-            <span className="text-sm font-semibold tracking-tight text-foreground">AdeCerebiia</span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-[10px] font-medium text-foreground/75">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-            </span>
-            En línea
-          </div>
+          ))}
+        </dl>
+        <div className="m-3 flex items-center justify-between gap-4 rounded-2xl bg-lime px-5 py-4 text-navy">
+          <span className="text-base font-semibold">Total a pagar</span>
+          <span className="zero-pop font-display text-5xl font-extrabold leading-none tracking-[-0.04em]">$0</span>
         </div>
+      </div>
+      <figcaption className="mt-4 text-center text-sm text-muted-foreground">
+        Solo aplicas en la nómina el descuento que te reportamos.
+      </figcaption>
+    </figure>
+  );
+}
 
-        <div className="relative z-[1] mx-auto mt-6 flex h-28 w-28 items-center justify-center sm:mt-10 sm:h-40 sm:w-40">
-          <span className="absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring" />
-          <span
-            className="absolute h-full w-full rounded-full bg-primary/10 animate-pulse-ring"
-            style={{ animationDelay: "1.2s" }}
+/** Comprobante de ejemplo: explica el modelo de negocio en una imagen. */
+function AdvanceReceipt({ amount, fee }: { amount: number; fee: number }) {
+  const rows = [
+    { label: "Monto solicitado", value: <CountUp value={amount} /> },
+    { label: "Comisión (la paga el empleado)", value: <CountUp value={fee} prefix="−" duration={700} />, muted: true },
+    { label: "Llega a su cuenta", value: <CountUp value={amount - fee} duration={1300} />, strong: true },
+    { label: "Se descuenta en la próxima nómina", value: <CountUp value={amount} /> },
+  ];
+  return (
+    <figure data-reveal="right" style={delay(120)} className="flex w-full flex-col" aria-label="Ejemplo de un adelanto con ZÜPA">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-3xl bg-white text-foreground shadow-[0_30px_70px_-35px_oklch(0.21_0.07_280/0.45)] ring-1 ring-border">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <span className="font-display text-lg font-bold text-navy">Tu empleado</span>
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-mist px-3 py-1 text-xs font-medium text-muted-foreground">
+            Ejemplo con 1 cuota
+          </span>
+        </div>
+        <dl className="flex-1 divide-y divide-border px-6">
+          {rows.map((r) => (
+            <div key={r.label} className="flex items-baseline justify-between gap-4 py-3.5">
+              <dt className="text-sm text-muted-foreground">{r.label}</dt>
+              <dd
+                className={`shrink-0 whitespace-nowrap font-display tabular-nums ${
+                  r.strong ? "text-xl font-bold text-navy" : r.muted ? "text-base text-muted-foreground" : "text-base font-semibold text-navy"
+                }`}
+              >
+                {r.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <div className="m-3 flex items-center justify-between gap-4 rounded-2xl bg-lime px-5 py-4 text-navy">
+          <span className="text-base font-semibold">Costo para tu empresa</span>
+          <span className="font-display text-5xl font-extrabold leading-none tracking-[-0.04em]">$0</span>
+        </div>
+      </div>
+      <figcaption className="mt-4 text-center text-sm text-muted-foreground">
+        Tarifa de {formatCOP(TARIFA_POR_CUOTA)} por cuota, sin intereses.
+      </figcaption>
+    </figure>
+  );
+}
+
+/* ---------- Confianza para la empresa ---------- */
+
+function TrustSection() {
+  const items = [
+    {
+      icon: Wallet,
+      q: "¿Mi empresa tiene que poner dinero?",
+      a: "No. ZÜPA desembolsa cada adelanto desde sus propias cuentas. La caja de tu empresa no se toca.",
+    },
+    {
+      icon: FileSpreadsheet,
+      q: "¿Cambia mi proceso de nómina?",
+      a: "No. Al cierre del mes recibes un Excel con el descuento de cada persona y lo aplicas como cualquier otra deducción.",
+    },
+    {
+      icon: ShieldCheck,
+      q: "¿Y si alguien pide más de lo que puede pagar?",
+      a: `No puede. El tope es el ${TOPE_PORCENTAJE} % de lo que ya trabajó en el mes, en máximo ${MAX_CUOTAS} cuotas.`,
+    },
+    {
+      icon: Users,
+      q: "¿Quién valida a los empleados?",
+      a: "ZÜPA. Antes de su primer adelanto, cada empleado sube su documento de identidad, una selfie y su certificación laboral.",
+    },
+    {
+      icon: Activity,
+      q: "¿Puedo ver todo lo que pasa?",
+      a: "Sí. Cada solicitud, desembolso y descuento queda en tu panel, con historial de auditoría.",
+    },
+  ];
+
+  return (
+    <section id="confianza" className="scroll-mt-16 py-16 sm:py-28">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHeading
+            title="Lo que le preocupa a tu empresa, resuelto."
+            intro="Estas son las preguntas que nos hace cada gerente de recursos humanos antes de firmar. Sin letra pequeña."
           />
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)] ring-4 ring-primary/12 sm:h-28 sm:w-28">
-            <SectionIcon icon={ShieldCheck} size="xl" surface="light" />
-            <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-lg ring-2 ring-accent/20 sm:h-9 sm:w-9">
-              <SectionIcon icon={CircleCheckBig} size="xs" surface="light" />
-            </span>
-          </div>
+          <p data-reveal className="mt-6 text-sm text-muted-foreground">
+            ZÜPA es operado por Cerebiia.
+          </p>
         </div>
 
-        <div className="relative z-[1] mt-6 text-center sm:mt-10">
-          <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/50 sm:text-[11px]">
-            Confianza · Bienestar
-          </div>
-          <div className="mt-2 text-xl font-bold leading-tight text-foreground sm:text-2xl">
-            Adelantos seguros
-            <br />
-            para tu equipo
-          </div>
-        </div>
-
-        <div className="relative z-[1] mt-6 grid grid-cols-3 gap-1.5 border-t border-foreground/8 pt-4 text-center sm:mt-8 sm:gap-2 sm:pt-5">
-          <TrustStat label="Cuotas" value="Hasta 3" />
-          <TrustStat label="Costo empresa" value="$0" />
-          <TrustStat label="Tarifa" value="$8.000" />
-        </div>
+        <ul className="divide-y divide-border border-y border-border">
+          {items.map(({ icon: Icon, q, a }, i) => (
+            <li key={q} data-reveal style={delay(i * 80)} className="grid grid-cols-[2.5rem_1fr] gap-x-4 py-6 sm:gap-x-5 sm:py-7">
+              <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-lime">
+                <Icon className="h-5 w-5" aria-hidden />
+              </span>
+              <div>
+                <h3 className="text-xl font-bold leading-snug text-navy">{q}</h3>
+                <p className="mt-2 text-base leading-relaxed text-muted-foreground">{a}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
-
-      <div className="absolute -left-12 top-16 hidden animate-float sm:block lg:-left-16 lg:top-20">
-        <FloatingChip icon={ShieldCheck} title="Sin riesgo" sub="Para tu empresa" />
-      </div>
-      <div
-        className="absolute -right-12 bottom-32 hidden animate-float-slow sm:block lg:-right-16 lg:bottom-36"
-        style={{ animationDelay: "0.6s" }}
-      >
-        <FloatingChip icon={Split} title="Hasta 3 cuotas" sub="Flexibilidad de pago" />
-      </div>
-      <div
-        className="absolute -left-10 bottom-6 hidden animate-float-slow sm:block lg:-left-14 lg:bottom-8"
-        style={{ animationDelay: "1.1s" }}
-      >
-        <FloatingChip icon={BadgeDollarSign} title="Tarifa fija" sub="$8.000 por adelanto" />
-      </div>
-    </div>
+    </section>
   );
 }
 
-function TrustStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-wider text-foreground/50">{label}</div>
-      <div className="mt-1 text-sm font-bold text-foreground">{value}</div>
-    </div>
-  );
-}
+/* ---------- Cómo funciona: historia con scroll ---------- */
 
-function FloatingChip({
-  icon,
-  title,
-  sub,
-  className = "",
-  style,
-}: {
-  icon: LucideIcon;
-  title: string;
-  sub: string;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <div
-      className={`floating-chip flex max-w-[12rem] items-center gap-3 px-3 py-2.5 sm:max-w-none sm:px-3.5 sm:py-3 ${className}`}
-      style={style}
-    >
-      <SectionIcon icon={icon} size="sm" surface="light" className="shrink-0" />
-      <div className="min-w-0 pr-1 text-left">
-        <div className="text-xs font-semibold leading-tight text-foreground sm:text-sm">{title}</div>
-        <div className="text-left text-[10px] text-foreground/60 sm:text-[11px]">{sub}</div>
-      </div>
-    </div>
-  );
-}
-
-/* ---------- Impact Metrics ---------- */
-const IMPACT_METRICS = [
+const HOW_STEPS = [
   {
-    icon: HeartPulse,
-    target: 70,
-    prefix: "",
-    suffix: "%",
-    label: "Estrés Financiero",
-    description:
-      "De los trabajadores sufre de ansiedad por su flujo de caja. Reduce esta carga ofreciendo liquidez sobre el salario ya devengado.",
+    title: "Firmamos el convenio",
+    desc: "Sin costo de implementación ni mensualidad. Cargas tu nómina con nuestra plantilla de Excel.",
+    highlight: "Plantilla de Excel lista",
   },
   {
-    icon: UserRoundMinus,
-    target: -16,
-    prefix: "",
-    suffix: "%",
-    label: "Rotación de Personal",
-    description:
-      "Disminución promedio en la deserción laboral al implementar programas modernos de bienestar financiero e incentivos internos.",
+    title: "Tus empleados activan su cuenta",
+    desc: "Cada empleado entra con su documento, valida su identidad y queda listo para pedir.",
+    highlight: "100 % digital",
   },
   {
-    icon: CircleDollarSign,
-    target: 0,
-    prefix: "$",
-    suffix: "",
-    label: "Costo Organizacional",
-    description:
-      "Cero costos de afiliación, mantenimiento o integración. Un beneficio de alto impacto operativo totalmente gratuito para la empresa.",
+    title: "Piden y reciben su dinero",
+    desc: `Hasta el ${TOPE_PORCENTAJE} % de lo que ya trabajaron en el mes, en 1 a ${MAX_CUOTAS} cuotas. ZÜPA desembolsa a su cuenta.`,
+    highlight: "Desembolso directo de ZÜPA",
   },
-] as const;
+  {
+    title: "Descuentas y nos transfieres",
+    desc: "Al cierre del mes te enviamos el reporte de cuotas. Lo aplicas en tu nómina normal y nos transfieres lo descontado.",
+    highlight: "Reporte listo para nómina",
+  },
+];
 
-type ImpactMetric = (typeof IMPACT_METRICS)[number];
-
-function formatMetricValue(value: number, metric: ImpactMetric) {
-  const rounded = Math.round(value);
-  return `${metric.prefix}${rounded}${metric.suffix}`;
-}
-
-function easeOutCubic(t: number) {
-  return 1 - (1 - t) ** 3;
-}
-
-function CountUpMetric({
-  metric,
-  duration = 1600,
-}: {
-  metric: ImpactMetric;
-  duration?: number;
-}) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const frameRef = useRef<number | null>(null);
-  const [display, setDisplay] = useState(() => formatMetricValue(0, metric));
+function HowItWorks() {
+  const [active, setActive] = useState(0);
+  const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const startValue = 0;
-    const { target } = metric;
-
-    const cancel = () => {
-      if (frameRef.current !== null) {
-        cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-      }
-    };
-
-    const runCount = () => {
-      cancel();
-
-      if (reducedMotion) {
-        setDisplay(formatMetricValue(target, metric));
-        return;
-      }
-
-      const startTime = performance.now();
-
-      const tick = (now: number) => {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const eased = easeOutCubic(progress);
-        const current = startValue + (target - startValue) * eased;
-        setDisplay(formatMetricValue(current, metric));
-
-        if (progress < 1) {
-          frameRef.current = requestAnimationFrame(tick);
-        } else {
-          frameRef.current = null;
-        }
-      };
-
-      frameRef.current = requestAnimationFrame(tick);
-    };
-
+    const list = listRef.current;
+    if (!list || !("IntersectionObserver" in window)) return;
     const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setDisplay(formatMetricValue(startValue, metric));
-            runCount();
-          } else {
-            cancel();
-            setDisplay(formatMetricValue(startValue, metric));
-          }
+          if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.index));
         }
       },
-      { threshold: 0.4, rootMargin: "0px 0px -40px 0px" }
+      { rootMargin: "-45% 0px -45% 0px" },
     );
-
-    io.observe(el);
-    return () => {
-      cancel();
-      io.disconnect();
-    };
-  }, [metric, duration]);
+    list.querySelectorAll("[data-index]").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   return (
-    <span
-      ref={ref}
-      className="tabular-nums text-white"
-    >
-      {display}
+    <section id="como-funciona" className="scroll-mt-16 bg-mist py-16 sm:py-28">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <SectionHeading
+          title="Cómo funciona."
+          intro="Cuatro pasos. Tu equipo de nómina hace lo mismo que ya hace hoy: aplicar descuentos."
+        />
+
+        <div className="mt-12 lg:mt-6 lg:grid lg:grid-cols-[1fr_1.05fr] lg:gap-16">
+          <ol ref={listRef}>
+            {HOW_STEPS.map((step, i) => {
+              const isActive = active === i;
+              return (
+                <li
+                  key={step.title}
+                  data-index={i}
+                  className="mt-14 first:mt-0 lg:mt-0 lg:flex lg:min-h-[64vh] lg:items-center"
+                >
+                  <div className={`transition-opacity duration-500 ${isActive ? "lg:opacity-100" : "lg:opacity-30"}`}>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`flex h-10 w-10 items-center justify-center rounded-full font-display text-base font-extrabold transition-colors duration-500 ${
+                          isActive ? "bg-lime text-navy" : "bg-navy text-lime"
+                        }`}
+                      >
+                        {i + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-navy/60">
+                        Paso {i + 1} de {HOW_STEPS.length}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-balance text-[clamp(1.7rem,3vw,2.5rem)] font-extrabold leading-[1.08] tracking-[-0.03em] text-navy">
+                      {step.title}
+                    </h3>
+                    <p className="mt-3 max-w-md text-lg leading-relaxed text-muted-foreground">{step.desc}</p>
+                    <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-navy ring-1 ring-border">
+                      <span className="h-2 w-2 rounded-full bg-lime" aria-hidden />
+                      {step.highlight}
+                    </p>
+
+                    {/* En celular, cada paso trae su escena debajo */}
+                    <div data-reveal="scale" className="mt-7 rounded-[1.75rem] bg-navy p-5 lg:hidden">
+                      <StoryScene index={i} active />
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+
+          {/* En escritorio, la escena queda fija y cambia con cada paso */}
+          <div className="hidden lg:block" aria-hidden>
+            <div className="sticky top-[calc(50vh-16rem)] h-[32rem]">
+              <div className="relative h-full overflow-hidden rounded-[2rem] bg-navy p-8 shadow-[0_40px_90px_-40px_oklch(0.21_0.07_280/0.6)]">
+                <div className="flex gap-2">
+                  {HOW_STEPS.map((step, i) => (
+                    <span key={step.title} className="h-1 flex-1 overflow-hidden rounded-full bg-white/10">
+                      <span
+                        className={`block h-full origin-left rounded-full bg-lime transition-transform duration-700 ${
+                          i <= active ? "scale-x-100" : "scale-x-0"
+                        }`}
+                      />
+                    </span>
+                  ))}
+                </div>
+                {HOW_STEPS.map((step, i) => (
+                  <div
+                    key={step.title}
+                    className={`absolute inset-x-8 bottom-8 top-16 flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                      active === i ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
+                    }`}
+                  >
+                    <StoryScene index={i} active={active === i} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StoryScene({ index, active }: { index: number; active: boolean }) {
+  const scenes = [SceneAgreement, SceneActivation, SceneDisbursement, SceneClosing];
+  const Scene = scenes[index];
+  return (
+    <div className="scene w-full" data-active={active}>
+      <Scene />
+    </div>
+  );
+}
+
+function SceneCheck() {
+  return (
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime text-navy">
+      <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
     </span>
   );
 }
 
-function ImpactMetricCard({ metric }: { metric: ImpactMetric }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const toggleExpanded = useCallback(() => {
-    if (!window.matchMedia("(hover: none)").matches) return;
-    setExpanded((open) => !open);
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      toggleExpanded();
-    },
-    [toggleExpanded],
-  );
-
+function SceneAgreement() {
+  const items = ["Sin costo de implementación", "Sin mensualidad", "Nómina cargada con la plantilla"];
   return (
-    <div
-      className="h-full"
-      role="button"
-      tabIndex={0}
-      aria-expanded={expanded}
-      aria-label={`${metric.label}. ${expanded ? "Ocultar detalle" : "Ver detalle"}`}
-      onClick={toggleExpanded}
-      onKeyDown={handleKeyDown}
-    >
-      <GlassCard
-        className={`impact-metric-card group p-5 sm:p-6 ${expanded ? "is-expanded" : ""}`}
-        hover
-      >
-        <div className="flex flex-col items-center text-center">
-          <SectionIcon
-            icon={metric.icon}
-            size="md"
-            surface="dark"
-            className="impact-metric-icon mb-3"
-          />
-
-          <div className="text-4xl font-extrabold leading-none sm:text-5xl">
-            <CountUpMetric metric={metric} />
-          </div>
-
-          <h3 className="mt-2.5 text-sm font-bold tracking-wide text-white sm:text-base">
-            {metric.label}
-          </h3>
-
-          <p className="impact-metric-desc text-left text-sm leading-relaxed text-white/65">
-            {metric.description}
-          </p>
-        </div>
-      </GlassCard>
-    </div>
-  );
-}
-
-function ImpactMetrics() {
-  return (
-    <section className="section-shell">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
-          {IMPACT_METRICS.map((metric, i) => (
-            <Reveal key={metric.label} delay={i * 100}>
-              <ImpactMetricCard metric={metric} />
-            </Reveal>
-          ))}
+    <div className="relative mx-auto w-full max-w-sm rounded-2xl bg-white p-6 text-foreground">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-mist text-navy">
+          <FileCheck2 className="h-5 w-5" aria-hidden />
+        </span>
+        <div>
+          <p className="font-display text-base font-bold text-navy">Convenio ZÜPA</p>
+          <p className="text-xs text-muted-foreground">Acme Colombia S.A.S.</p>
         </div>
       </div>
-    </section>
-  );
-}
-
-/* ---------- Corporate Benefits ---------- */
-const CORPORATE_BENEFITS = [
-  {
-    icon: UserRoundCheck,
-    title: "Retención de talento clave",
-    desc: "Fortalece la propuesta de valor para tus colaboradores con un beneficio financiero tangible que impacta directamente en la permanencia del equipo.",
-  },
-  {
-    icon: Activity,
-    title: "Mayor productividad operativa",
-    desc: "Reduce el ausentismo y el estrés financiero del personal, mejorando el foco, la asistencia y el desempeño en operaciones críticas.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Cero riesgo para la empresa",
-    desc: "Implementación sin costo organizacional, sin endeudamiento corporativo y con trazabilidad completa en cada adelanto descontado por nómina.",
-  },
-] as const;
-
-function CorporateBenefits() {
-  return (
-    <section className="section-shell">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <Reveal>
-          <SectionHeader
-            title="Diseñado para optimizar tus Recursos Humanos"
-            subtitle="Un beneficio financiero que fortalece tu equipo sin costo para la organización."
-          />
-        </Reveal>
-
-        <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
-          {CORPORATE_BENEFITS.map(({ icon: Icon, title, desc }, i) => (
-            <Reveal key={title} delay={i * 100}>
-              <GlassCard as="article" className="h-full p-6 text-left sm:p-7" hover>
-                <BenefitCardIcon icon={Icon} />
-                <h3 className="mb-2 text-left text-lg font-semibold text-white sm:text-xl">{title}</h3>
-                <p className="text-left text-sm leading-relaxed text-white/70">{desc}</p>
-              </GlassCard>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Features (beneficios) ---------- */
-const FEATURE_ITEMS = [
-  {
-    icon: Rocket,
-    title: "Solicitud en segundos",
-    desc: "Tus empleados solicitan su adelanto desde la app en pocos segundos, cuando lo necesiten.",
-  },
-  {
-    icon: CalendarRange,
-    title: "Pagos hasta en 3 cuotas",
-    desc: "Cada adelanto se puede pagar hasta en 3 cuotas, sin afectar el bolsillo del empleado.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Cero riesgo para la empresa",
-    desc: "La empresa no paga nada. El empleado asume una tarifa fija de $8.000 por adelanto.",
-  },
-  {
-    icon: UserRoundCheck,
-    title: "Retención de talento",
-    desc: "Un beneficio diferencial que reduce rotación y aumenta la satisfacción del equipo.",
-  },
-  {
-    icon: PiggyBank,
-    title: "Bienestar financiero",
-    desc: "Reduce el estrés financiero y elimina la dependencia de préstamos con altos intereses.",
-  },
-  {
-    icon: TabletSmartphone,
-    title: "100% digital",
-    desc: "Sin papeleos ni trámites. Tus empleados solicitan desde su móvil en cualquier momento.",
-  },
-] satisfies ReadonlyArray<{ icon: LucideIcon; title: string; desc: string }>;
-
-function Features() {
-  return (
-    <section id="producto" className="section-shell section-surface-light relative overflow-hidden">
-      <LightSectionDecorations />
-      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
-        <Reveal>
-          <SectionHeader
-            badge="Beneficios"
-            title="Bienestar para tu equipo, tranquilidad para tu empresa"
-            subtitle="Una solución integral donde la empresa no asume costos y el empleado accede a su salario ganado de forma flexible."
-          />
-        </Reveal>
-
-        <div className="mt-10 grid gap-5 sm:mt-14 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {FEATURE_ITEMS.map(({ icon, title, desc }, i) => (
-            <Reveal key={title} delay={i * 80}>
-              <article className="feature-glass-card h-full p-5 text-left sm:p-7">
-                <div className="feature-glass-card-icon">
-                  <SectionIcon icon={icon} size="lg" surface="light" />
-                </div>
-                <h3 className="feature-glass-card-title text-lg font-semibold text-foreground">{title}</h3>
-                <p className="feature-glass-card-desc mt-2 text-sm leading-relaxed text-foreground/70">{desc}</p>
-              </article>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- Installments (cuotas) ---------- */
-const CUOTAS_STEPS = [
-  { n: "1", label: "Cuota única", desc: "Descuento total en la próxima liquidación de nómina." },
-  { n: "2", label: "2 cuotas", desc: "El monto se reparte entre los dos periodos siguientes." },
-  { n: "3", label: "3 cuotas", desc: "Máxima flexibilidad para el flujo de caja del colaborador." },
-] as const;
-
-function CuotasTimelineFigure({ n, active = false }: { n: string; active?: boolean }) {
-  return (
-    <div
-      className={cn(
-        "cuotas-timeline-figure relative z-10 flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full text-2xl font-bold text-primary-foreground shadow-[var(--shadow-orb)] ring-4 ring-transparent transition-[transform,box-shadow] duration-500",
-        active && "is-active",
-      )}
-    >
-      <div
-        className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full"
-        style={{ background: "var(--gradient-orb)" }}
-      >
-        <span className="cuotas-figure-shine" aria-hidden />
-        <span className="relative z-[1]">{n}</span>
-      </div>
-    </div>
-  );
-}
-
-function CuotasTimelineCard({ label, desc }: { label: string; desc: string }) {
-  return (
-    <GlassCard as="article" className="flex h-full w-full flex-col p-5 text-left sm:p-6" hover={false}>
-      <div className="text-center text-lg font-semibold text-white sm:text-left">{label}</div>
-      <div className="mt-1 flex-1 text-left text-sm leading-relaxed text-white/70">{desc}</div>
-    </GlassCard>
-  );
-}
-
-function CuotasTimelineStep({
-  step,
-  index,
-  active,
-  onActivate,
-  orientation = "horizontal",
-  showConnector = false,
-  connectorActive = false,
-}: {
-  step: (typeof CUOTAS_STEPS)[number];
-  index: number;
-  active: boolean;
-  onActivate: () => void;
-  orientation?: "horizontal" | "vertical";
-  showConnector?: boolean;
-  connectorActive?: boolean;
-}) {
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onActivate();
-    }
-  };
-
-  return (
-    <div
-      className={cn(
-        "cuotas-timeline-step group/step flex flex-col items-center outline-none",
-        orientation === "horizontal" ? "h-full" : "w-full max-w-sm",
-        active && "is-active",
-      )}
-      role="button"
-      tabIndex={0}
-      aria-expanded={active}
-      aria-label={`${step.label}: ${step.desc}`}
-      onMouseEnter={onActivate}
-      onFocus={onActivate}
-      onClick={onActivate}
-      onKeyDown={handleKeyDown}
-    >
-      <CuotasTimelineFigure n={step.n} active={active} />
-      <div
-        className={cn(
-          "cuotas-step-card-panel mt-4 w-full",
-          orientation === "horizontal" && "flex flex-1 flex-col",
-          active && "is-expanded",
-        )}
-        style={{ transitionDelay: active ? `${index * 70}ms` : "0ms" }}
-      >
-        <div className="cuotas-step-card-inner">
-          <CuotasTimelineCard label={step.label} desc={step.desc} />
-        </div>
-      </div>
-      {showConnector && (
-        <div className="relative my-3 flex h-12 w-0.5 shrink-0" aria-hidden>
-          <div className="h-full w-full rounded-full bg-white/15" />
-          <div
-            className={cn(
-              "cuotas-timeline-segment-fill-v absolute inset-0 origin-top scale-y-0 rounded-full bg-gradient-to-b from-white/50 via-white to-white/50",
-              connectorActive && "is-active",
-            )}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CuotasTimeline() {
-  const [activeStep, setActiveStep] = useState(0);
-
-  return (
-    <div
-      className="cuotas-timeline group/timeline relative"
-      data-active-step={activeStep}
-      onMouseLeave={() => setActiveStep(0)}
-    >
-      {/* Desktop: pasos en columna (figura + card) con línea en el centro de las figuras */}
-      <div className="relative hidden sm:block">
-        <div className="pointer-events-none absolute inset-x-0 top-7 z-0 h-0.5" aria-hidden>
-          <div
-            className="cuotas-timeline-segment cuotas-timeline-segment-1 absolute top-0 h-full"
-            style={{ left: "16.666%", width: "33.333%" }}
-          >
-            <div className="h-full rounded-full bg-white/15" />
-            <div
-              className={cn(
-                "cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50",
-                activeStep >= 1 && "is-active",
-              )}
-            />
-          </div>
-          <div
-            className="cuotas-timeline-segment cuotas-timeline-segment-2 absolute top-0 h-full"
-            style={{ left: "50%", width: "33.333%" }}
-          >
-            <div className="h-full rounded-full bg-white/15" />
-            <div
-              className={cn(
-                "cuotas-timeline-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full bg-gradient-to-r from-white/50 via-white to-white/50",
-                activeStep >= 2 && "is-active",
-              )}
-              style={{ transitionDelay: activeStep >= 2 ? "0.12s" : "0ms" }}
-            />
-          </div>
-        </div>
-
-        <div className="relative z-10 grid grid-cols-3 items-start gap-4">
-          {CUOTAS_STEPS.map((step, i) => (
-            <CuotasTimelineStep
-              key={step.n}
-              step={step}
-              index={i}
-              active={activeStep === i}
-              onActivate={() => setActiveStep(i)}
-              orientation="horizontal"
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Mobile: pasos verticales con conector entre centros de figura */}
-      <div className="flex flex-col items-center sm:hidden">
-        {CUOTAS_STEPS.map((step, i) => (
-          <CuotasTimelineStep
-            key={step.n}
-            step={step}
-            index={i}
-            active={activeStep === i}
-            onActivate={() => setActiveStep(i)}
-            orientation="vertical"
-            showConnector={i < CUOTAS_STEPS.length - 1}
-            connectorActive={activeStep > i}
-          />
+      <ul className="mt-5 space-y-3">
+        {items.map((item, i) => (
+          <li key={item} className="scene-item flex items-center gap-3 text-[15px] text-navy" style={delay(200 + i * 220)}>
+            <SceneCheck />
+            {item}
+          </li>
         ))}
+      </ul>
+      <span className="scene-stamp absolute -right-3 -top-3 rotate-6 rounded-xl border-2 border-navy bg-lime px-3 py-1.5 font-display text-sm font-extrabold text-navy" style={delay(950)}>
+        Firmado
+      </span>
+    </div>
+  );
+}
+
+function SceneActivation() {
+  const checks = ["Documento de identidad", "Selfie", "Certificación laboral"];
+  return (
+    <div className="mx-auto w-full max-w-sm rounded-2xl bg-white p-6 text-foreground">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy font-display text-sm font-bold text-white">LM</span>
+        <div>
+          <p className="font-display text-base font-bold text-navy">Laura Méndez</p>
+          <p className="text-xs text-muted-foreground">Activación de cuenta</p>
+        </div>
+      </div>
+      <ul className="mt-5 divide-y divide-border">
+        {checks.map((item, i) => (
+          <li key={item} className="scene-item flex items-center justify-between gap-3 py-2.5 text-[15px] text-navy" style={delay(200 + i * 220)}>
+            {item}
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy">
+              Validado <SceneCheck />
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="scene-item mt-4 rounded-xl bg-lime px-4 py-2.5 text-center font-display text-sm font-bold text-navy" style={delay(950)}>
+        Cuenta activa, lista para pedir
+      </p>
+    </div>
+  );
+}
+
+function SceneDisbursement() {
+  return (
+    <div className="mx-auto w-full max-w-sm space-y-3">
+      <div className="rounded-2xl bg-white p-6 text-foreground">
+        <p className="text-sm text-muted-foreground">Llega a la cuenta de Laura</p>
+        <p className="scene-item mt-1 font-display text-5xl font-extrabold tracking-[-0.04em] text-navy" style={delay(150)}>
+          $492.000
+        </p>
+        <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-sm">
+          <div className="scene-item flex justify-between text-muted-foreground" style={delay(350)}>
+            <span>Solicitado</span>
+            <span className="tabular-nums">$500.000</span>
+          </div>
+          <div className="scene-item flex justify-between text-muted-foreground" style={delay(500)}>
+            <span>Comisión (la paga Laura)</span>
+            <span className="tabular-nums">−$8.000</span>
+          </div>
+        </div>
+      </div>
+      <div className="scene-item" style={delay(800)}>
+        <DisbursedToast amount={492_000} />
       </div>
     </div>
   );
 }
 
-function Installments() {
+function SceneClosing() {
+  const rows = [
+    ["Laura Méndez", "Cuota 1 de 2", 250_000],
+    ["Andrés Rojas", "Cuota 1 de 1", 250_000],
+    ["Camila Torres", "Cuota 2 de 3", 200_000],
+  ] as const;
+  const total = rows.reduce((sum, r) => sum + r[2], 0);
   return (
-    <section id="cuotas" className="section-shell relative overflow-hidden">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="grid items-center gap-10 sm:gap-16 lg:grid-cols-2">
-          <Reveal>
-            <SectionBadge>Pagos a cuotas</SectionBadge>
-            <h2 className="section-title mt-4 text-left">
-              Flexibilidad de pago para tu equipo
-            </h2>
-            <p className="section-subtitle mt-4 text-left">
-              Tus colaboradores pueden repartir cada adelanto en hasta 3 cuotas, según su momento
-              financiero. Sin costo para la empresa: solo aplica una tarifa fija de $8.000 por
-              solicitud.
-            </p>
-            <ul className="mt-6 space-y-3 sm:mt-8">
-              {[
-                "Descuento automático por nómina, sin gestión manual para RR.HH.",
-                "El colaborador elige entre 1, 2 o 3 cuotas al solicitar el adelanto.",
-                "Tarifa transparente de $8.000: un adelanto de $500.000 se desembolsa en $492.000.",
-                "Visibilidad total: cuotas, saldos y fechas de descuento en tiempo real.",
-                "Sin intereses ocultos ni condiciones en letra pequeña.",
-              ].map((b) => (
-                <li key={b} className="flex items-start gap-3">
-                  <CheckIcon light />
-                  <span className="text-left text-sm text-white/90 sm:text-base">{b}</span>
-                </li>
+    <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl bg-white text-foreground">
+      <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[oklch(0.55_0.13_150)] text-white">
+          <FileSpreadsheet className="h-5 w-5" aria-hidden />
+        </span>
+        <div>
+          <p className="font-display text-sm font-bold text-navy">Cierre de nómina, noviembre</p>
+          <p className="text-xs text-muted-foreground">Reporte de ZÜPA</p>
+        </div>
+      </div>
+      <ul className="divide-y divide-border px-5 text-sm">
+        {rows.map(([name, cuota, amount], i) => (
+          <li key={name} className="scene-item flex items-center justify-between gap-3 py-2.5" style={delay(200 + i * 180)}>
+            <span>
+              <span className="block font-medium text-navy">{name}</span>
+              <span className="text-xs text-muted-foreground">{cuota}</span>
+            </span>
+            <span className="tabular-nums font-semibold text-navy">{formatCOP(amount)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="scene-item flex items-center justify-between gap-3 bg-lime px-5 py-3.5 text-navy" style={delay(850)}>
+        <span className="inline-flex items-center gap-2 text-sm font-bold">
+          <SceneCheck /> Transferencia a ZÜPA
+        </span>
+        <span className="font-display text-lg font-extrabold tabular-nums">{formatCOP(total)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Simulador ---------- */
+
+function Simulator() {
+  const [amount, setAmount] = useState(500_000);
+  const [cuotas, setCuotas] = useState(2);
+  const [firstAdvance, setFirstAdvance] = useState(false);
+  const amountId = useId();
+  const firstId = useId();
+
+  const chargedCuotas = firstAdvance ? cuotas - 1 : cuotas;
+  const fee = TARIFA_POR_CUOTA * chargedCuotas;
+  const received = amount - fee;
+  const perCuota = amount / cuotas;
+  const fillPct = ((amount - 50_000) / (1_500_000 - 50_000)) * 100;
+  const feeShown = useTweened(fee);
+  const receivedShown = useTweened(received);
+  const perCuotaShown = useTweened(perCuota);
+
+  const perks = [
+    { icon: Smartphone, text: "Lo pide desde el celular, sin filas ni papeles." },
+    { icon: Wallet, text: "El dinero llega a su cuenta bancaria." },
+    { icon: ShieldCheck, text: `Puede pedir hasta el ${TOPE_PORCENTAJE} % de lo que ya trabajó: nadie se endeuda de más.` },
+  ];
+
+  return (
+    <section id="simulador" className="scroll-mt-16 py-16 sm:py-28">
+      <div className="mx-auto grid max-w-7xl items-start gap-14 px-5 sm:px-6 lg:grid-cols-2 lg:gap-20">
+        <div>
+          <SectionHeading
+            title="Así lo vive tu equipo."
+            intro="Precio claro desde el primer día. Mueve los valores y mira cuánto recibe un empleado y cuánto paga tu empresa."
+          />
+          <div data-reveal className="relative mx-auto mt-12 hidden w-[270px] lg:block">
+            <PhoneMockup />
+            <div className="absolute -left-24 top-[58%] w-[250px]">
+              <DisbursedToast amount={received} />
+            </div>
+          </div>
+          <ul className="mt-10 space-y-5 lg:hidden">
+            {perks.map(({ icon: Icon, text }, i) => (
+              <li key={text} data-reveal style={delay(i * 110)} className="flex items-start gap-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lime/40 text-navy">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="pt-2 text-base leading-relaxed text-foreground">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div data-reveal="scale" className="rounded-3xl border border-border bg-white p-6 sm:p-8">
+          <div className="flex items-baseline justify-between gap-4">
+            <label htmlFor={amountId} className="text-sm font-medium text-muted-foreground">
+              Monto del adelanto
+            </label>
+            <output htmlFor={amountId} className="font-display text-3xl font-extrabold tracking-[-0.03em] text-navy tabular-nums">
+              {formatCOP(amount)}
+            </output>
+          </div>
+          <input
+            id={amountId}
+            type="range"
+            min={50_000}
+            max={1_500_000}
+            step={10_000}
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="zupa-range mt-4 w-full"
+            style={{ "--fill": `${fillPct}%` } as React.CSSProperties}
+          />
+
+          <fieldset className="mt-7">
+            <legend className="text-sm font-medium text-muted-foreground">Número de cuotas</legend>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {Array.from({ length: MAX_CUOTAS }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-pressed={cuotas === n}
+                  onClick={() => setCuotas(n)}
+                  className={`rounded-xl border py-3 text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 ${
+                    cuotas === n
+                      ? "border-navy bg-navy text-white"
+                      : "border-border bg-white text-navy hover:bg-mist"
+                  }`}
+                >
+                  {n} {n === 1 ? "cuota" : "cuotas"}
+                </button>
               ))}
-            </ul>
-          </Reveal>
-
-          <Reveal delay={150}>
-            <CuotasTimeline />
-          </Reveal>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- How it works ---------- */
-const HOW_IT_WORKS_STEPS = [
-  { n: "01", title: "Conecta tu nómina", desc: "Integramos AdeCerebiia con tu sistema de nómina en días." },
-  { n: "02", title: "Activa a tus empleados", desc: "Cada empleado recibe acceso a su panel personal." },
-  { n: "03", title: "Solicitan desde la app", desc: "Piden el adelanto y eligen entre 1, 2 o 3 cuotas. La solicitud llega al panel de Cerebiia." },
-  { n: "04", title: "Pagamos y descontamos", desc: "Nuestro equipo procesa y desembolsa el adelanto. Las cuotas se descuentan de la nómina sin trabajo extra para ti." },
-] as const;
-
-function HowStepFigure({ n, light = false }: { n: string; light?: boolean }) {
-  return (
-    <div className="how-works-figure relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-primary-foreground shadow-[var(--shadow-brand)] ring-4 ring-transparent transition-shadow duration-500 sm:h-14 sm:w-14 sm:text-base">
-      <div
-        className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full"
-        style={{ background: light ? "var(--gradient-brand)" : "var(--gradient-orb)" }}
-      >
-        <span className="how-figure-shine" aria-hidden />
-        <span className="relative z-[1]">{n}</span>
-      </div>
-    </div>
-  );
-}
-
-function HowWorksStepCard({ title, desc, light = false }: { title: string; desc: string; light?: boolean }) {
-  return (
-    <GlassCard as="article" light={light} className="group/step flex h-full w-full flex-col p-5 text-left sm:p-6" hover>
-      <h3 className={`text-left text-base font-semibold sm:text-lg ${light ? "text-foreground" : "text-white"}`}>{title}</h3>
-      <p className={`mt-2 flex-1 text-left text-sm leading-relaxed ${light ? "text-foreground/70" : "text-white/70"}`}>{desc}</p>
-      <div
-        className={`mt-4 h-px w-full origin-left scale-x-0 bg-gradient-to-r from-transparent to-transparent transition-transform duration-700 group-hover/step:scale-x-100 ${light ? "via-primary/30" : "via-white/35"}`}
-      />
-    </GlassCard>
-  );
-}
-
-function HowWorksTimeline({ active, light = false }: { active: boolean; light?: boolean }) {
-  return (
-    <div className="how-works-timeline group/timeline relative mt-10 sm:mt-16">
-      {/* Desktop: línea entre centros de figura */}
-      <div className="relative hidden lg:block">
-        <div className="pointer-events-none absolute inset-x-0 top-7 z-0 h-0.5" aria-hidden>
-          {[
-            { left: "12.5%", width: "25%" },
-            { left: "37.5%", width: "25%" },
-            { left: "62.5%", width: "25%" },
-          ].map((seg, i) => (
-            <div
-              key={seg.left}
-              className={`how-works-segment how-works-segment-${i + 1} absolute top-0 h-full`}
-              style={{ left: seg.left, width: seg.width }}
-            >
-              <div className={`h-full rounded-full ${light ? "bg-primary/15" : "bg-white/12"}`} />
-              <div
-                className={`how-works-segment-fill absolute inset-0 origin-left scale-x-0 rounded-full ${light ? "bg-gradient-to-r from-primary/35 via-primary to-primary/35" : "bg-gradient-to-r from-white/40 via-white to-white/40"} ${active ? "is-active" : ""}`}
-                style={{ transitionDelay: active ? `${240 + i * 120}ms` : "0ms" }}
-              />
             </div>
-          ))}
-        </div>
+          </fieldset>
 
-        <div className="relative z-10 grid grid-cols-4 items-stretch gap-5">
-          {HOW_IT_WORKS_STEPS.map((step, i) => (
-            <div
-              key={`lg-${step.n}`}
-              className="how-works-step group/step flex h-full flex-col items-center"
-            >
-              <HowStepFigure n={step.n} light={light} />
-              <div
-                className={`how-step-card-fall mt-4 flex w-full flex-1 flex-col ${active ? "is-active" : ""}`}
-                style={{ transitionDelay: active ? `${220 + i * 160}ms` : "0ms" }}
-              >
-                <HowWorksStepCard title={step.title} desc={step.desc} light={light} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+          <label htmlFor={firstId} className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 rounded-xl text-[15px] text-foreground">
+            <input
+              id={firstId}
+              type="checkbox"
+              checked={firstAdvance}
+              onChange={(e) => setFirstAdvance(e.target.checked)}
+              className="h-6 w-6 shrink-0 rounded accent-[oklch(0.2122_0.0732_280.44)]"
+            />
+            Es su primer adelanto (la primera cuota no tiene comisión)
+          </label>
 
-      {/* Tablet / mobile */}
-      <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:hidden">
-        {HOW_IT_WORKS_STEPS.map((step, i) => (
-          <div
-            key={`sm-${step.n}`}
-            className="how-works-step group/step flex h-full flex-col"
-          >
-            <div className="mb-4 flex justify-center sm:justify-start">
-              <HowStepFigure n={step.n} light={light} />
-            </div>
-            <div
-              className={`how-step-card-fall flex flex-1 flex-col ${active ? "is-active" : ""}`}
-              style={{ transitionDelay: active ? `${180 + i * 140}ms` : "0ms" }}
-            >
-              <HowWorksStepCard title={step.title} desc={step.desc} light={light} />
-            </div>
+          <dl className="mt-7 divide-y divide-border border-t border-border" aria-live="polite">
+            <SimRow
+              label={`Comisión (${chargedCuotas} × ${formatCOP(TARIFA_POR_CUOTA)})`}
+              value={Math.round(feeShown) === 0 ? "$0" : `−${formatCOP(feeShown)}`}
+            />
+            <SimRow label="Llega a su cuenta" value={formatCOP(receivedShown)} strong />
+            <SimRow
+              label={cuotas === 1 ? "Se descuenta en la próxima nómina" : `Se descuenta en ${cuotas} nóminas de`}
+              value={`${cuotas === 1 ? "" : "≈ "}${formatCOP(perCuotaShown)}`}
+            />
+          </dl>
+
+          <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl bg-navy px-5 py-4 text-white">
+            <span className="text-base font-medium">Costo para tu empresa</span>
+            <span className="font-display text-4xl font-extrabold leading-none text-lime">$0</span>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function HowItWorks() {
-  const { sectionRef, active } = useSectionActivation("como-funciona");
-
-  return (
-    <section
-      id="como-funciona"
-      ref={sectionRef}
-      className="section-shell section-surface-light relative overflow-hidden"
-    >
-      <LightSectionDecorations />
-      <div className="relative z-[1] mx-auto max-w-7xl px-4 sm:px-6">
-        <Reveal>
-          <SectionHeader
-            badge="Cómo funciona"
-            title="Implementación simple. Impacto inmediato."
-            subtitle="Cuatro pasos para activar adelantos de nómina en tu empresa sin fricción operativa."
-          />
-        </Reveal>
-
-        <HowWorksTimeline active={active} light />
+        </div>
       </div>
     </section>
   );
 }
 
-/* ---------- For companies ---------- */
+function SimRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-3.5">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className={`shrink-0 whitespace-nowrap font-display tabular-nums text-navy ${strong ? "text-2xl font-extrabold" : "text-base font-semibold"}`}>
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+/* ---------- Para tu empresa ---------- */
+
 function ForCompanies() {
-  const benefits = [
-    "Atrae y retiene talento con un beneficio diferencial",
-    "Reduce el ausentismo causado por estrés financiero",
-    "Aumenta la productividad y satisfacción del equipo",
-    "Sin costo de implementación ni mantenimiento",
-    "La empresa no paga nada: el empleado asume el costo de $8.000 por adelanto",
-    "Integración con tu sistema de nómina actual",
-    "Soporte dedicado para tu empresa y empleados",
+  const modules = [
+    { icon: Users, title: "Tu planta en un solo lugar", desc: "Carga o actualiza la nómina con una plantilla de Excel." },
+    { icon: Activity, title: "Monitoreo de adelantos", desc: "Quién pidió, cuánto y en cuántas cuotas, en tiempo real." },
+    { icon: CalendarClock, title: "Seguimiento de cuotas", desc: "Lo descontado y lo pendiente de cada empleado." },
+    { icon: FileSpreadsheet, title: "Cierre del mes listo", desc: "El reporte de descuentos para tu nómina, exportable a Excel." },
+  ];
+
+  return (
+    <section id="panel" className="scroll-mt-16 overflow-hidden bg-navy pt-16 pb-10 text-white sm:pt-28 sm:pb-16">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <SectionHeading
+          invert
+          title="Un beneficio que se administra solo."
+          intro="Tu equipo de recursos humanos tiene su propio panel. Sin conciliaciones manuales ni correos de ida y vuelta: cada mes recibes el valor exacto que debes descontar a cada persona."
+        />
+
+        <figure data-reveal="scale" className="mt-14">
+          <DashboardMockup />
+          <figcaption className="mt-4 text-sm text-lavender">
+            Panel de empresa de ZÜPA, con datos de ejemplo.
+          </figcaption>
+        </figure>
+
+        <ul className="mt-12 grid grid-cols-2 gap-x-5 gap-y-8 sm:mt-14 lg:grid-cols-4 lg:gap-x-10">
+          {modules.map(({ icon: Icon, title, desc }, i) => (
+            <li key={title} data-reveal style={delay(i * 110)}>
+              <Icon className="h-6 w-6 text-lime" aria-hidden />
+              <h3 className="mt-3 text-base font-bold leading-snug text-white sm:text-lg">{title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-lavender sm:text-[15px]">{desc}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/** Réplica del panel de empresa (ventana de navegador). Datos ilustrativos. */
+function DashboardMockup() {
+  const nav = ["Dashboard", "Mis empleados", "Monitoreo adelantos", "Seguimiento cuotas", "Retenciones y cierres"];
+  const rows = [
+    { name: "Laura Méndez", amount: 400_000, cuotas: "2 de 2", state: "Al día" },
+    { name: "Andrés Rojas", amount: 250_000, cuotas: "1 de 1", state: "Al día" },
+    { name: "Camila Torres", amount: 600_000, cuotas: "1 de 3", state: "En curso" },
   ];
   return (
-    <section id="empresas" className="section-shell">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="grid items-center gap-10 sm:gap-16 lg:grid-cols-2">
-          <Reveal className="order-2 lg:order-1">
-            <div className="relative">
-              <div
-                className="absolute -inset-3 -z-10 rounded-3xl opacity-30 blur-2xl sm:-inset-4"
-                style={{ background: "var(--gradient-orb)" }}
-              />
-              <GlassCard className="relative overflow-hidden p-6 text-left sm:p-10" hover={false}>
-                <div
-                  className="absolute inset-0 opacity-90"
-                  style={{ background: "var(--gradient-orb)" }}
-                />
-                <div className="relative text-left text-primary-foreground">
-                  <SectionIcon icon={Landmark} size="xl" surface="dark" />
-                  <div className="mt-4 text-4xl font-bold leading-tight sm:mt-6 sm:text-5xl">+85%</div>
-                  <p className="mt-2 text-left text-base leading-relaxed text-white/90 sm:text-lg">
-                    de los empleados reportan mayor tranquilidad financiera tras adoptar adelantos de nómina.
-                  </p>
-                  <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/20 pt-5 sm:mt-8 sm:pt-6">
-                    <div>
-                      <div className="text-2xl font-bold sm:text-3xl">+40%</div>
-                      <div className="text-xs text-white/75 sm:text-sm">Retención</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold sm:text-3xl">-30%</div>
-                      <div className="text-xs text-white/75 sm:text-sm">Ausentismo</div>
-                    </div>
-                  </div>
-                </div>
-              </GlassCard>
-            </div>
-          </Reveal>
+    <div
+      className="overflow-hidden rounded-2xl bg-white ring-1 ring-white/15 text-foreground shadow-[0_50px_120px_-40px_oklch(0_0_0/0.8)]"
+      aria-hidden
+    >
+      {/* barra del navegador */}
+      <div className="flex items-center gap-2 border-b border-border bg-mist px-4 py-3">
+        <span className="h-3 w-3 rounded-full bg-[oklch(0.7_0.17_25)]" />
+        <span className="h-3 w-3 rounded-full bg-[oklch(0.82_0.15_85)]" />
+        <span className="h-3 w-3 rounded-full bg-[oklch(0.75_0.16_145)]" />
+        <span className="ml-4 hidden rounded-md bg-white px-3 py-1 text-xs text-muted-foreground sm:block">
+          app.zupa · Panel empresa
+        </span>
+      </div>
 
-          <Reveal delay={120} className="order-1 lg:order-2">
-            <SectionBadge>Para empresas</SectionBadge>
-            <h2 className="section-title mt-4 text-left">
-              Un beneficio que tu equipo va a amar
-            </h2>
-            <p className="section-subtitle mt-4 text-left">
-              AdeCerebiia se integra con tu sistema de nómina y entrega a tu equipo acceso a su salario ganado.
-              Sin costo para la empresa, sin riesgo, sin complicaciones.
-            </p>
-            <ul className="mt-6 space-y-3 sm:mt-8">
-              {benefits.map((b) => (
-                <li key={b} className="flex items-start gap-3">
-                  <CheckIcon light />
-                  <span className="text-left text-sm text-white/90 sm:text-base">{b}</span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
+      <div className="grid md:grid-cols-[210px_1fr]">
+        {/* sidebar */}
+        <div className="hidden bg-navy p-4 md:block">
+          <img src="/zupa-logo.png" alt="" className="-ml-2 h-12 w-auto" />
+          <ul className="mt-4 space-y-1">
+            {nav.map((item, i) => (
+              <li
+                key={item}
+                className={`rounded-lg px-3 py-2 text-[13px] ${
+                  i === 0 ? "bg-lime font-bold text-navy" : "text-lavender"
+                }`}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* contenido */}
+        <div className="space-y-4 bg-mist p-4 sm:p-6">
+          <div className="rounded-2xl bg-navy p-5 text-white sm:p-6">
+            <p className="font-display text-lg font-bold sm:text-xl">Buenos días, Recursos Humanos</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-[1.2fr_2fr] sm:items-end">
+              <div>
+                <p className="text-xs text-lavender">Nómina habilitada para adelantos</p>
+                <p className="font-display text-5xl font-extrabold leading-none tracking-[-0.04em] text-lime">
+                  <CountUp value={92} duration={1400} format={(n) => `${Math.round(n)}%`} />
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-sm">
+                {[
+                  ["Adelantos", <CountUp key="a" value={18} format={(n) => String(Math.round(n))} />],
+                  ["A descontar", <CountUp key="d" value={4_320_000} duration={1400} />],
+                  ["Tu costo", "$0"],
+                ].map(([label, value]) => (
+                  <div key={label as string} className="border-l border-white/10 pl-3">
+                    <p className="text-[11px] text-lavender">{label}</p>
+                    <p className="font-display text-base font-bold sm:text-lg">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-border bg-white">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <p className="font-display text-sm font-bold text-navy">Cuotas de este mes</p>
+              <span className="whitespace-nowrap rounded-lg bg-lime/40 px-2.5 py-1 text-xs font-semibold text-navy">Exportar Excel</span>
+            </div>
+            <table className="w-full text-left text-[13px]">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 font-medium">Empleado</th>
+                  <th className="px-4 py-2 font-medium">Adelanto</th>
+                  <th className="hidden px-4 py-2 font-medium sm:table-cell">Cuota</th>
+                  <th className="hidden px-4 py-2 font-medium sm:table-cell">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.map((r, i) => (
+                  <tr key={r.name} data-reveal="row" style={delay(300 + i * 140)}>
+                    <td className="whitespace-nowrap px-4 py-2.5 font-medium text-navy">{r.name}</td>
+                    <td className="px-4 py-2.5 tabular-nums">{formatCOP(r.amount)}</td>
+                    <td className="hidden px-4 py-2.5 sm:table-cell">{r.cuotas}</td>
+                    <td className="hidden px-4 py-2.5 sm:table-cell">
+                      <span className="whitespace-nowrap rounded-full bg-mist px-2 py-0.5 text-xs text-navy">{r.state}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
-/* ---------- CTA ---------- */
-function CTA() {
+/* ---------- CTA final ---------- */
+
+function FinalCta() {
   return (
-    <section id="contacto" className="section-shell">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <Reveal>
-          <GlassCard className="relative overflow-hidden p-6 sm:p-12 lg:p-16" hover={false}>
-            <div
-              className="pointer-events-none absolute inset-0 opacity-80"
-              style={{ background: "var(--gradient-orb)" }}
-            />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,hsl(0_0%_100%_/_0.15),transparent_50%)]" />
-            <div className="pointer-events-none absolute inset-0 opacity-20">
-              <svg className="absolute right-4 top-4 sm:right-8 sm:top-8" width="72" height="72" viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="1" />
-              </svg>
-              <svg className="absolute -bottom-10 -left-10 hidden sm:block" width="180" height="180" viewBox="0 0 180 180" fill="none">
-                <rect x="20" y="20" width="140" height="140" rx="20" stroke="white" strokeWidth="1" transform="rotate(20 90 90)" />
-              </svg>
-            </div>
-            <div className="relative text-left text-white">
-              <h2 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-                Dale a tu equipo el beneficio que estaban esperando
-              </h2>
-              <p className="mt-3 max-w-xl text-left text-base leading-relaxed text-white/85 sm:mt-4 sm:text-lg">
-                Agenda una demo de 20 minutos y descubre cómo AdeCerebiia transforma la nómina de tu empresa.
-              </p>
-              <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
-                <GlassButtonPrimary
-                  href={WHATSAPP_URL}
-                  external
-                  className="w-full justify-center gap-2 bg-white text-[hsl(262_55%_40%)] shadow-[var(--shadow-cta-white)] hover:bg-white/95 sm:w-auto"
-                >
-                  Contactarnos por WhatsApp
-                  <ArrowRight className="h-4 w-4 shrink-0" />
-                </GlassButtonPrimary>
-              </div>
-            </div>
-          </GlassCard>
-        </Reveal>
+    <section className="bg-navy px-5 pb-20 pt-6 sm:px-6 sm:pb-28 sm:pt-10">
+      <div
+        data-reveal="scale"
+        className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-lime px-7 py-12 text-navy sm:px-14 sm:py-16 lg:px-16 lg:py-20 shadow-[0_25px_60px_-15px_rgba(216,255,62,0.22)]"
+      >
+        {/* Formas y brillos sutiles de fondo para dar profundidad */}
+        <div
+          className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/25 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-navy/10 blur-2xl"
+          aria-hidden
+        />
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-navy/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-navy">
+            <span className="h-2 w-2 rounded-full bg-navy" />
+            Sin costo de implementación · Listo en 48 horas
+          </div>
+
+          <h2 className="mt-6 max-w-3xl text-balance font-display text-[clamp(2.2rem,4.5vw,3.75rem)] font-extrabold leading-[1.04] tracking-[-0.03em] text-navy">
+            Lleva ZÜPA a tu empresa este mes.
+          </h2>
+
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-navy/85 sm:text-xl">
+            Agenda 20 minutos por WhatsApp y te mostramos el panel de empresa y cómo se ve el cierre de
+            nómina con tus números.
+          </p>
+
+          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-sm font-semibold text-navy/90">
+            <span className="inline-flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 stroke-[2.5]" /> Tu empresa paga $0
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 stroke-[2.5]" /> Carga rápida con Excel
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0 stroke-[2.5]" /> Sin permanencia obligatoria
+            </span>
+          </div>
+
+          <div className="mt-8 flex flex-col items-start gap-4 sm:mt-10 sm:flex-row sm:items-center">
+            <WhatsAppButton
+              tone="navy"
+              className="w-full whitespace-nowrap px-8 py-4 text-base font-bold shadow-lg transition-all hover:shadow-xl sm:w-auto"
+            >
+              Agendar demo por WhatsApp
+            </WhatsAppButton>
+            <span className="text-xs font-medium text-navy/70">Atención directa · Respuesta en minutos</span>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ---------- Footer ---------- */
+
 function Footer() {
+  const links = [
+    { href: "#confianza", label: "Confianza" },
+    { href: "#como-funciona", label: "Cómo funciona" },
+    { href: "#simulador", label: "Simulador" },
+    { href: "#panel", label: "Panel de empresa" },
+  ];
+  const linkClass =
+    "inline-block rounded py-1.5 text-[15px] text-lavender transition-colors hover:text-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime";
+
   return (
-    <footer className="border-t border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
-        <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4">
-          <div className="col-span-2 md:col-span-1">
-            <Logo inverted />
-            <p className="mt-4 max-w-xs text-left text-sm leading-relaxed text-white/75">
-              Plataforma de adelantos de nómina. Tu dinero, a tu ritmo.
-            </p>
-          </div>
-          <FooterCol title="Producto" links={["Beneficios", "Pagos a cuotas", "Seguridad", "Integraciones"]} />
-          <FooterCol title="Empresa" links={["Sobre nosotros", "Clientes", "Blog", "Contacto"]} />
-          <FooterCol title="Legal" links={["Términos", "Privacidad", "Cookies"]} />
+    <footer className="overflow-hidden bg-navy text-white">
+      <div className="relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-14 pt-16 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.3fr_0.8fr_0.9fr_1.2fr] lg:gap-10 lg:pb-16 lg:pt-20">
+        <div data-reveal>
+          <Logo className="-ml-2 h-14" />
+          <p className="mt-4 font-display text-2xl font-bold tracking-[-0.02em]">Tu plata. Tus reglas.</p>
+          <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-lavender">
+            Adelantos de nómina para los equipos de las empresas en Colombia. Sin costo para la empresa.
+          </p>
         </div>
-        <div className="mt-8 border-t border-white/15 pt-5 text-center text-xs text-white/60 sm:mt-12 sm:pt-6">
-          © 2026 AdeCerebiia · Todos los derechos reservados
+
+        <nav data-reveal style={delay(100)} aria-label="Secciones de la página">
+          <h2 className="text-sm font-semibold text-white">Explora</h2>
+          <ul className="mt-3 space-y-1">
+            {links.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} className={linkClass}>
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div data-reveal style={delay(150)}>
+          <h2 className="text-sm font-semibold text-white">Accede a ZÜPA</h2>
+          <ul className="mt-3 space-y-1">
+            <li>
+              <a href={LOGIN_URL} className={linkClass}>
+                Ingresar a la app
+              </a>
+            </li>
+            <li>
+              <a href={ACTIVATE_URL} className={linkClass}>
+                Activar mi cuenta
+              </a>
+            </li>
+          </ul>
+          <p className="mt-3 max-w-[15rem] text-sm leading-relaxed text-lavender/70">
+            Para empleados y empresas que ya tienen convenio.
+          </p>
+        </div>
+
+        <div data-reveal style={delay(200)}>
+          <h2 className="text-sm font-semibold text-white">Habla con nosotros</h2>
+          <p className="mt-4 text-[15px] leading-relaxed text-lavender">
+            Te mostramos ZÜPA con los números de tu empresa en una llamada de 20 minutos.
+          </p>
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block rounded font-display text-xl font-bold text-white transition-colors hover:text-lime focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime"
+          >
+            +57 320 957 6723
+          </a>
+          <div className="mt-5">
+            <WhatsAppButton className="px-5 py-3 text-sm">Escribir por WhatsApp</WhatsAppButton>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-10 border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-6 text-sm text-lavender/80 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>© {new Date().getFullYear()} ZÜPA · Un producto de Cerebiia</p>
+          <a href="#contenido" className={`inline-flex items-center gap-2 ${linkClass}`}>
+            <ArrowUp className="h-4 w-4" aria-hidden />
+            Volver arriba
+          </a>
         </div>
       </div>
     </footer>
-  );
-}
-
-function FooterCol({ title, links }: { title: string; links: string[] }) {
-  return (
-    <div>
-      <div className="text-sm font-semibold text-white">{title}</div>
-      <ul className="mt-4 space-y-2">
-        {links.map((l) => (
-          <li key={l}>
-            <a href="#" className="text-sm text-white/65 transition-colors hover:text-white">{l}</a>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
